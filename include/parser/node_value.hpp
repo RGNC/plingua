@@ -44,15 +44,15 @@ public:
 	NodeValue(long value) : value(value), flags(NO_ERROR | CLONG) {}
 	NodeValue(NodeValueType type, NodeValueError error, long value) : value(value), flags (error | type) {}
 	NodeValue(NodeValueType type, long value) : value(value), flags(NO_ERROR | type) {}
-	NodeValue(long value, bool cte) : value(value) {setCte(cte);}
+	NodeValue(long value, bool cte) : value(value), flags(NO_ERROR | CLONG) {setCte(cte);}
 	
 	NodeValue(double value) :value(value), flags(NO_ERROR | CDOUBLE) {}
 	NodeValue(NodeValueType type, double value) : value(value), flags (getError(value) | type) {}
-	NodeValue(double value, bool cte) : value(value) {setCte(cte);}
+	NodeValue(double value, bool cte) : value(value), flags(NO_ERROR | CDOUBLE)  {setCte(cte);}
 		
 	NodeValue(char* value) : value(parseString(value)), flags(NO_ERROR | CSTR) {}
 	NodeValue(NodeValueType type, char* value) : value(parseString(value)), flags(NO_ERROR | type) {}
-	NodeValue(char* value, bool cte) : value(parseString(value)) {setCte(cte);}
+	NodeValue(char* value, bool cte) : value(parseString(value)), flags(NO_ERROR | CSTR) {setCte(cte);}
 	
 	~NodeValue();
 	

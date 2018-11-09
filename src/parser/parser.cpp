@@ -285,7 +285,7 @@ bool Parser::getVariableAsString(Node& variable, std::string& str)
 					success=false;
 				}
 				str+=value.castString().getString();
-				if (i+1<variable[i].size()) {
+				if (j+1<variable[i].size()) {
 					str+=",";
 				}
 			}
