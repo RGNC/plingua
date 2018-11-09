@@ -1,0 +1,93 @@
+ /* 
+  * SAT.pli:
+  * This P-Lingua program defines a family of recognizer P systems 
+  * to solve the SAT problem.
+  *
+  * For more information about P-Lingua see http://www.gcn.us.es/plingua.htm
+  *
+  * Copyright (C) 2008  Ignacio Perez-Hurtado (perezh@us.es)
+  *                     Research Group On Natural Computing
+  *                     http://www.gcn.us.es
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+  */
+
+/* Module that defines a family of recognizer P systems
+   to solve the SAT problem */
+@model<membrane_division>
+def Sat(m,n)
+{
+ /* Initial configuration */
+ @mu = [[]'2]'1;
+
+ /* Initial multisets */
+ @ms(2) = d{1};
+
+ /* Set of rules */
+ [d{k}]'2 --> +[d{k}]-[d{k}] : 1 <= k <= n;
+
+ {
+  +[x{i,1} --> r{i,1}]'2;
+  -[nx{i,1} --> r{i,1}]'2;
+  -[x{i,1} --> #]'2;
+  +[nx{i,1} --> #]'2;
+ } : 1 <= i <= m;
+
+ {
+  +[x{i,j} --> x{i,j-1}]'2;
+  -[x{i,j} --> x{i,j-1}]'2;
+  +[nx{i,j} --> nx{i,j-1}]'2;
+  -[nx{i,j} --> nx{i,j-1}]'2;
+ } : 1<=i<=m, 2<=j<=n;
+
+ {
+  +[d{k}]'2 --> []d{k};
+  -[d{k}]'2 --> []d{k};
+ } : 1<=k<=n;
+
+ d{k}[]'2 --> [d{k+1}] : 1<=k<=n-1;
+ [r{i,k} --> r{i,k+1}]'2 : 1<=i<=m, 1<=k<=2*n-1;
+ [d{k} --> d{k+1}]'1 : n <= k<= 3*n-3;
+ [d{3*n-2} --> d{3*n-1},e]'1;
+ e[]'2 --> +[c{1}];
+ [d{3*n-1} --> d{3*n}]'1;
+ [d{k} --> d{k+1}]'1 : 3*n <= k <= 3*n+2*m+2;
+ +[r{1,2*n}]'2 --> -[]r{1,2*n};
+ -[r{i,2*n} --> r{i-1,2*n}]'2 : 1<= i <= m;
+ r{1,2*n}-[]'2 --> +[r{0,2*n}];
+ -[c{k} --> c{k+1}]'2 : 1<=k<=m;
+ +[c{m+1}]'2 --> +[]c{m+1};
+ [c{m+1} --> c{m+2},t]'1;
+ [t]'1 --> +[]t;
+ +[c{m+2}]'1 --> -[]Yes;
+ [d{3*n+2*m+3}]'1 --> +[]No;
+
+} /* End of Sat module */
+
+/* Main module */
+def main()
+{
+ /* Call to Sat module for m=4 and n=6 */
+ 
+ call Sat(4,6);
+ 
+ /* Expansion of the input multiset */
+ 
+ @ms(2) += x{1,1}, nx{1,2}, nx{2,2}, x{2,3},
+           nx{2,4}, x{3,5}, nx{4,6};
+ 
+ /* To define another P system of the family, call the Sat module with other parameters and 
+    expand the input multiset with other values */
+    
+} /* End of main module */

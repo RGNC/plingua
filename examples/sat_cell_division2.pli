@@ -1,0 +1,96 @@
+ /* 
+  * confluent-cell-like-SAT.pli:
+  * This P-Lingua program defines a family of recognizer P systems 
+  * to solve the SAT problem, slightly adapting the design presented in:
+  *  Zandron, C., Ferretti, C., Mauri, G.: 
+  *  Solving NP-complete problems using P systems with active membranes.
+  *  In: Antoniou, I., Calude, C., Dinneen, M. (eds.)
+  *  Unconventional Models of Computation, UMC2K, pp. 289–301.
+  *  Discrete Mathematics and Theoretical Computer Science, Springer (2001)
+  *
+  * For more information about P-Lingua see http://www.gcn.us.es/plingua.htm
+  *
+  * Copyright (C) 2008  Ignacio Perez-Hurtado (perezh@us.es)
+  *                     Research Group On Natural Computing
+  *                     http://www.gcn.us.es
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+  */
+
+/* Module that defines a family of recognizer P systems
+   to solve the SAT problem */
+@model<membrane_division>
+def Sat(n,m)
+{
+ /* Initial configuration */
+ @mu = [[]'2]'1;
+
+ /* Initial multisets */
+ 
+ @ms(1) = c{0};
+ @ms(2) += a{i} : 1 <= i <= n;
+ @ms(2) += Z{0};
+
+ /* Set of rules */
+ 
+ [a{i}]'2 --> [t{i}][f{i}] : 1 <= i <= n;
+ 
+ [Z{k} --> Z{k+1}]'2 : 0 <= k <= n - 2;
+ 
+ [Z{n-1} --> Z{n},W{1}]'2;
+ 
+ [Z{n}]'2 --> +[]'2;
+ 
+ /* clause rules  */
+ 
+ +[t{1} --> r{1},r{3},r{6}]'2;
+ +[t{2} --> r{1},r{2},r{4},r{5},r{7}]'2;
+ +[t{3} --> r{7}]'2;
+ +[t{4} --> r{1},r{3},r{4},r{5},r{6},r{7}]'2;
+ 
+ +[f{1} --> r{2},r{5},r{7}]'2;
+ +[f{2} --> r{1},r{3},r{4}]'2;
+ +[f{3} --> r{1},r{3},r{4}]'2;
+ 
+ /* end clause rules */
+ 
+ +[r{1}]'2 --> -[]'2 r{1};
+ 
+ r{1} -[]'2 --> +[r{0}]'2;
+ 
+ -[r{k} --> r{k-1}]'2 : 1 <= k <= m;
+ 
+ -[W{k} --> W{k+1}]'2 : 1 <= k <= m;
+ 
+ [c{k} --> c{k+1}]'1 : 0 <= k <= n + 2*m + 3;
+ 
+ +[W{m+1}]'2 --> yes +[]'2;
+ 
+ [yes]'1 -->  yes +[]'1;
+ 
+ [c{n+2*m+4}]'1 --> no -[]'1;
+ 
+ 
+} /* End of Sat module */
+
+/* Main module */
+
+def main()
+{
+ /* Call to Sat module for n=4 and m=7 */
+
+ call Sat(4,7);
+
+
+} /* End of main module */
