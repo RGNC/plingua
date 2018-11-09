@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+
+# Directories
+bin
+obj
+
+# Temporal files
+*~
+
+# P-Lingua output
+*.bin
+*.json
+*.xml

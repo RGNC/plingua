@@ -52,7 +52,7 @@ clean:
 install:
 	@mkdir -p /usr/local/PLingua/$(BIN)/
 	@cp $(BDIR)/$(BIN) /usr/local/PLingua/$(BIN)/
-	@cp LICENSE.txt /usr/local/PLingua/$(BIN)/
+	@cp LICENSE /usr/local/PLingua/$(BIN)/
 	@ln -sf /usr/local/PLingua/$(BIN)/$(BIN) /usr/local/bin/
 	@cp -rf $(IDIR)/cereal/ /usr/local/include/
 	@mkdir -p /usr/local/include/plingua/

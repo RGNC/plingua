@@ -1105,7 +1105,7 @@ bool Parser::unrollDoWhile(Node& sentence){
 	while (condition.isTrue() && unrollSentence(sentence[0])) {
 		computeValue(sentence[1]);
 	}
-	if (!(condition.isError() && condition.isUnknown()) || condition.isGenericError()) {
+	if ((!condition.isError() && condition.isUnknown()) || condition.isGenericError()) {
 		error("invalid do-while condition",sentence[1].getLocation());
 	}
 	return condition.isFalse();
@@ -1118,7 +1118,7 @@ bool Parser::unrollFor(Node& sentence) {
 	while (condition.isTrue() && unrollSentence(sentence[3]) && unrollSentence(sentence[2])) {
 		computeValue(sentence[1]);
 	}
-	if (!(condition.isError() && condition.isUnknown()) || condition.isGenericError()) {
+	if ((!condition.isError() && condition.isUnknown()) || condition.isGenericError()) {
 		error("invalid for condition",sentence[1].getLocation());
 	}
 	return condition.isFalse();
