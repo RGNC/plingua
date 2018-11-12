@@ -203,7 +203,7 @@ void Value::load(A& archive) {
 		case STRING:
 		{
 			UId aux(archive, ALPHABET.getStringsAlphabetSize());
-			this->operator =(ALPHABET.getString(aux.getId()));
+			value_.stringValue = strdup(ALPHABET.getString(aux.getId()).c_str()); 
 		}
 		break;
 	};
@@ -304,7 +304,7 @@ void LabelString::save(A& archive) const {
 template<class A> 
 void LabelString::load(A& archive) {
 	UId aux(archive, ALPHABET.getLabelAlphabetSize());
-	this->operator =(ALPHABET.getLabel(aux.getId()));
+	String::operator =(ALPHABET.getLabel(aux.getId()));
 }
 
 
@@ -316,7 +316,7 @@ void ObjectString::save(A& archive) const {
 template<class A> 
 void ObjectString::load(A& archive) {
 	UId aux(archive, ALPHABET.getObjectAlphabetSize());
-	this->operator =(ALPHABET.getObject(aux.getId()));
+	String::operator =(ALPHABET.getObject(aux.getId()));
 }
 
 
@@ -328,7 +328,7 @@ void FeatureString::save(A& archive) const {
 template<class A> 
 void FeatureString::load(A& archive) {
 	UId aux(archive, ALPHABET.getFeatureAlphabetSize());
-	this->operator =(ALPHABET.getFeature(aux.getId()));
+	String::operator =(ALPHABET.getFeature(aux.getId()));
 }
 
 inline
@@ -375,7 +375,7 @@ void UId::save(A& archive) const {
 		unsigned int aux = (unsigned int)id;
 		archive(cereal::make_nvp("id",aux));
 	} else {
-		unsigned char aux = (unsigned char)id;
+		unsigned long aux = (unsigned long)id;
 		archive(cereal::make_nvp("id",aux));
 	}
 }
