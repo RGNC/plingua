@@ -1,0 +1,15 @@
+!tissue_communication
+{
+  [u]'h1 <--> [v]'h2;
+}
+	
+!tissue_separation
+{
+   [a]'h -> [ ]'h [ ]'h;
+   [a]'h -> [b]'h [ ]'h;
+   [a]'h -> [ ]'h [b]'h;
+   [a]'h -> [b]'h [c]'h;
+}
+
+@model(tissue_separation) = 
+       tissue_communication, @1{tissue_separation};

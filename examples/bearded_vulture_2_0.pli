@@ -46,6 +46,7 @@
  ********************************************************************/
 
 @model<probabilistic>
+@include "pdp_model.pli"
 
 def bearded_vulture_2(N,E)
 {

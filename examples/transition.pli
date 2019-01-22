@@ -1,4 +1,5 @@
 @model<transition>
+@include "transition_model.pli"
 
 def main()
 {

@@ -1,5 +1,5 @@
 @model<tissue_psystems>
-
+@include "tissue_division_model.pli"
 def main()
 {
   /* YES EN 27 PASOS */

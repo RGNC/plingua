@@ -1,0 +1,21 @@
+!transition_evolution /* Limited to rules with 3 inner membranes */
+{
+       [u -> v]'h;
+       [u -> v, @d]'h;
+   (?) [u -> v]'h;
+   (?) [u -> v, @d]'h;
+       [u [ ]'h1 --> v [w]'h1]'h;
+       [u [ ]'h1 --> v [w]'h1]'h;
+   (?) [u [ ]'h1 --> v [w]'h1]'h;
+   (?) [u [ ]'h1 --> v [w]'h1]'h;
+       [u [ ]'h1 [ ]'h2 --> v [w1]'h1 [w2]'h2]'h;
+       [u [ ]'h1 [ ]'h2 --> v [w1]'h1 [w2]'h2]'h;
+   (?) [u [ ]'h1 [ ]'h2 --> v [w1]'h1 [w2]'h2]'h;
+   (?) [u [ ]'h1 [ ]'h2 --> v [w1]'h1 [w2]'h2]'h;
+       [u [ ]'h1 [ ]'h2 [ ]'h3 --> v [w1]'h1 [w2]'h2 [w3]'h3]'h;
+       [u [ ]'h1 [ ]'h2 [ ]'h3 --> v [w1]'h1 [w2]'h2 [w3]'h3]'h;
+   (?) [u [ ]'h1 [ ]'h2 [ ]'h3 --> v [w1]'h1 [w2]'h2 [w3]'h3]'h;
+   (?) [u [ ]'h1 [ ]'h2 [ ]'h3 --> v [w1]'h1 [w2]'h2 [w3]'h3]'h;
+}
+
+@model(transition) = transition_evolution;

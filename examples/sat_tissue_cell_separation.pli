@@ -1,5 +1,5 @@
 @model<TSCS>
-
+@include "tissue_separation_model.pli"
 def main()
 {
 	let m= 3; 

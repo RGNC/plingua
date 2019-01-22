@@ -1,0 +1,32 @@
+!dam_evolution 
+{
+   ?[a -> v]'h;
+   ?[a ->  ]'h;
+}
+	
+!dam_send_in 
+{
+   a ?[ ]'h -> ?[b]'h;
+}
+
+!dam_send_out 
+{
+   ?[a]'h -> b ?[ ]'h;
+}
+	
+!dam_dissolution 
+{
+   ?[a]'h -> b;
+   ?[a]'h ->  ;
+}
+	
+!dam_division
+{
+   ?[a]'h -> ?[ ]'h ?[ ]'h;
+   ?[a]'h -> ?[b]'h ?[ ]'h;
+   ?[a]'h -> ?[ ]'h ?[b]'h;
+   ?[a]'h -> ?[b]'h ?[c]'h;
+}
+
+@model(membrane_division) = 
+       dam_evolution, @1{dam_send_in, dam_send_out, dam_dissolution, dam_division};

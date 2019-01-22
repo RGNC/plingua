@@ -31,6 +31,7 @@
 /* Module that defines a family of recognizer P systems
    to solve the SAT problem */
 @model<membrane_division>
+@include "membrane_division_model.pli"
 def Sat(n,m)
 {
  /* Initial configuration */

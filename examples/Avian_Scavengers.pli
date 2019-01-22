@@ -1,4 +1,5 @@
 @model<probabilistic>
+@include "pdp_model.pli"
 
 def main()
 {
