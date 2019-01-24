@@ -1,11 +1,11 @@
 
-!probabilistic_rule
+!skeleton_rule
 {
 	u1 ?[v1]'h -> u2 ?[v2]'h :: probability(double_t); 
 	//u1 ?[v1]'h1,h2 -> u2 ?[v2]'h1,h2 :: probability(double_t); 
 }
 
-!environment_communication_rule
+!communication_rule
 {
 	[[a]'e1 [ ]'e2 ]'p -> [[ ]'e1 [b]'e2 ]'p :: probability(double_t);  
 	[[a]'e ]'p -> [[b]'e ]'p :: probability(double_t);  
@@ -14,4 +14,4 @@
 }
 
 
-@model(pdp) = probabilistic_rule;
+@model(pdp) = skeleton_rule,communication_rule;
