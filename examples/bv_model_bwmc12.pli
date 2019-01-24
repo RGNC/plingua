@@ -1,0 +1,490 @@
+ /*******************************************************************
+ *                                                                  *
+ * This P-Lingua file is free software: you can redistribute        *
+ * it and/or modify it under the terms of the GNU General           *
+ * Public License as published by the Free Software Foundation,     *
+ * either version 3 of the License, or (at your option) any         *
+ * later version.                                                   *
+ *                                                                  *
+ * This P-Lingua file is distributed in the hope that it will       *
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied    *
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. *
+ * See the GNU General Public License for more details.             *
+ *                                                                  *
+ * For more information about the license,                          * 
+ * see <http://www.gnu.org/licenses/>.                              *
+ *                                                                  *
+ * For more information about P-Lingua,                             *
+ * see <http://www.p-lingua.org/>                                   *
+ *                                                                  *
+ * Copyright (c) Research Group on Natural Computing                *
+ *               http://www.gcn.us.es                               *
+ *                                                                  *
+ ********************************************************************
+ *                                                                  *
+ * This P-Lingua file specifies the model                           *
+ * of the Bearded Vulture Ecosystem described in:                   *
+ *                                                                  *
+ * M.A. del Amor et al. DCBA: Simulating Population Dynamics        *
+ * P Systems with Proportional Object Distribution.                 *
+ * Proceedings of the 10th Brainstorming Week on Membrane Computing *
+ * BWMC12 (2012). In press.                                         *
+ *                                                                  *
+ * To download this P-Lingua file and obtain information about how  *
+ * to run simulations of the defined model by using the pLinguaCore *
+ * library, see                                                     *
+ * <http://www.p-lingua.org/wiki/index.php/bvBWMC12>                *
+ *                                                                  *
+ * For information about the pLinguaCore library, see               *
+ * <http://www.p-lingua.org/wiki/index.php/PLinguaCore>             *
+ *                                                                  *
+ * At the end of this P-Lingua file, there are some necessary       *
+ * parameters for the model (defined as P-Lingua global variables). *
+ * The parameters values included in this file have been obtained   *
+ * from the referenced paper. These values are enough to run        *
+ * simulations of the model by using the pLinguaCore library.       *
+ *                                                                  *
+ ********************************************************************/
+
+@model<probabilistic>
+
+@include<pdp_model.pli>
+
+def main()
+{
+	call init_membrane_structure();
+	call init_multisets();
+	call init_rules();
+}
+
+def init_membrane_structure()
+{
+   @mu= [[[ [  ]'2 ]'1]'101,101]'global;
+}
+
+def init_multisets()
+{
+	let alpha = 0;
+	let alpha = alpha + q{1,j} : 1<= j <= 21;
+	let alpha = ceil (alpha * 1.1 * 682);
+	@ms(1) += X{i,j}*q{i,j} : 0<=j<=k{i,4},1<=i<=7;
+	@ms(2) = C, B*alpha;
+}
+
+def init_rules()
+{
+	/************************************/
+	/* Reproduction rules for ungulates */
+	/************************************/	
+	/* Adult males */
+	/* r_{0,i,j} */ [X{i,j}]'1 --> [Y{i,j}]'1 :: 1-k{i,13} : k{i,2}<=j<=k{i,4},2<=i<=7;
+
+	/* Adult females that reproduce */	
+	/* r_{1,i,j} */ [X{i,j}]'1 --> [Y{i,j},Y{i,0}]'1 :: k{i,5}*k{i,13} :  k{i,2}<=j<k{i,3},2<=i<=7,i<>3;
+	/* r_{1,i,j} */ [X{3,j}]'1 --> [Y{3,j},Y{3,0}]'1 :: k{3,5}*k{3,13}*(1-k{3,15})*0.5 :  k{3,2}<=j<k{3,3};
+	/* r1.3 */ [X{3,j}]'1 --> [Y{3,j},Y{4,0}]'1 :: k{3,5}*k{3,13}*(1-k{3,15})*0.5 :  k{3,2}<=j<k{3,3};
+	/* Fertile adult females that do not reproduce */	
+	/* r2 */ [X{i,j}]'1 --> [Y{i,j}]'1 :: (1-k{i,5})*k{i,13}*(1-k{i,15}) : k{i,2}<=j<k{i,3},1<=i<=7;
+
+	/* Not fertile adult females */
+	/* r3 */ [X{i,j}]'1 --> [Y{i,j}]'1 :: k{i,13}*(1-k{i,15}) : k{i,3}<=j<=k{i,4},1<=i<=7;
+
+	/* Young animals that do not reproduce */
+	/* r4 */ [X{i,j}]'1 --> [Y{i,j}]'1 :: 1-k{i,15} : 0<=j<k{i,2},1<=i<=7;
+
+	/****************/
+	/* Growth rules */
+	/****************/
+	/* r5 */ [X{i,j}]'1 --> [Y{i,k{i,2}-1},Y{i,j}]'1 :: (k{i,6}+k{i,10})*k{i,15} : k{i,2}<=j<k{i,4},1<=i<=7;
+	/* r6 */ [X{i,j}]'1 --> [Y{i,j}]'1 :: (1-k{i,6}-k{i,10})*k{i,15} : k{i,2}<=j<k{i,4},1<=i<=7;
+	/* r7 */ [X{i,j}]'1 --> [Y{i,k{i,2}-1},Y{i,j}] :: k{i,6}*k{i,15} : k{i,4}<=j<=k{i,4},1<=i<=7;
+	/* r8 */ [X{i,j}]'1 --> [Y{i,j}]'1 :: (1-k{i,6})*k{i,15} : k{i,4}<=j<=k{i,4},1<=i<=7;
+
+	/*******************/
+	/* Mortality rules */
+	/*******************/
+	/* Young animals */
+	/* Those which survive */	
+	/* r9 */ Y{i,j}[ ]'2 --> [Z{i,j}]'2 :: 1-k{i,7}-k{i,8} : 0<=j<k{i,1},2<=i<=7;
+	
+	/* Those which die */
+	/* r10 */ Y{i,j}[ ]'2 --> [B*k{i,11}]'2 :: k{i,8} : 0<=j<k{i,1},2<=i<=7;
+	
+	/* Those which are retired from the ecosystem */
+	/* r11 */ Y{i,j}[]'2 --> [ ]'2 :: k{i,7} : 0<=j<k{i,1},2<=i<=7;
+
+	/* Adult animals that don't arrive at an average life expectancy */
+	/* Those which survive */
+	/* r12 */ Y{i,j}[ ]'2 --> [Z{i,j}]'2 ::1-k{i,10} : k{i,1}<=j<k{i,4},2<=i<=7;
+	
+	/* Those which die */
+	/* r13 */ Y{i,j}[ ]'2 --> [B*k{i,12}]'2::k{i,10} : k{i,1}<=j<k{i,4},2<=i<=7;
+
+	/* Animals that arrive at an average life expectancy*/
+	/* Those which growth population depend on the fertility ratio and die in the ecosystem */
+	/* r14 */ Y{i,k{i,4}}[ ]'2 --> [B*k{i,12}]'2 :: (1-k{i,15})*(k{i,9}+(1-k{i,9})*k{i,10}) : k{i,4}<=j<=k{i,4},1<=i<=7;
+	
+	/* Those which growth population depend on the fertility ratio and are retired of the ecosystem */
+	/* r15 */ Y{i,k{i,4}}[]'2 --> [ ]'2 :: (1-k{i,15})*(1-k{i,9})*(1-k{i,10}) : k{i,4}<=j<=k{i,4},1<=i<=7;
+
+	/* Those which growth population not depend on the fertility ratio */
+	/* r16 */ /*Y{i,j}[ ]'2 --> [Z{i,k{i,2}}]'2 :: k{i,15} : k{i,4}<=j<=k{i,4},1<=i<=7;*/
+
+
+	/* NUEVAS REGLAS */
+	Y{1,j}[ ]'2 --> [Z{1,j}]'2 :: 1-k{1,10} : k{1,2}<=j<k{1,4};
+	Y{1,j}[ ]'2 --> []'2 :: k{1,10} : k{1,2}<=j<k{1,4};	
+
+	Y{1,k{1,4}}[ ]'2 --> [Z{1,k{1,2}-1}]'2 :: 1 ;
+	Y{1,k{1,2}-1}[ ]'2 --> [Z{1,k{1,2}-1}]'2 :: 1 ;
+
+	/*****************/	
+	/* Feeding rules */
+	/*****************/
+	/* r17 */ [Z{i,j},B*k{i,14}]'2 --> X{i,j+1} +[ ]'2 :: 1 : 0<=j<=k{i,4},1<=i<=7;
+
+	/*****************/
+	/* Balance rules */
+	/*****************/
+	/* Elimination of remaining bones */
+	/* r18 */ +[B]'2 --> [ ]'2 :: 1;
+	
+	/* Adult animals that die because they have not enough food */
+	/* r19 */ +[Z{i,j}]'2 --> [B*k{i,12}]'2 :: 1 : k{i,1}<=j<=k{i,4},1<=i<=7;
+	
+	/* Young animals that die because they have not enough food */
+	/* r20 */ +[Z{i,j}]'2 --> [B*k{i,11}]'2 :: 1 : 0<=j<k{i,1},1<=i<=7;
+
+	/* Change the polarization */
+	/* r21 */ +[C]'2 --> [C]'2 :: 1;
+	
+}
+
+/************************/
+/* Parameter values     */
+/************************/
+
+/*******************/
+/* Bearded Vulture */
+/*******************/
+k{1,1} = 1;
+k{1,2} = 8;
+k{1,3} = 20;
+k{1,4} = 21;
+k{1,5} = 0.38;
+k{1,6} = 0.05; /*0.04;*/
+k{1,7} = 0;
+k{1,8} = 0.06;
+k{1,9} = 1;
+k{1,10} = 0.12; /*0.12;*/
+k{1,11} = 0;
+k{1,12} = 0;
+k{1,13} = 0.5;
+k{1,14} = 460;
+k{1,15} = 1;
+
+/********************/
+/* Pyrenean Chamois */
+/********************/
+k{2,1} = 1;
+k{2,2} = 2;
+k{2,3} = 18;
+k{2,4} = 18;
+k{2,5} = 0.75;
+k{2,6} = 0; /* - */
+k{2,7} = 0;
+k{2,8} = 0.6;
+k{2,9} = 1;
+k{2,10} = 0.06;
+k{2,11} = 6;
+k{2,12} = 12;
+k{2,13} = 0.55;
+k{2,14} = 0; /* - */
+k{2,15} = 0;
+
+/*******************/
+/* Red Deer Female */
+/*******************/
+k{3,1} = 1;
+k{3,2} = 2;
+k{3,3} = 17;
+k{3,4} = 17;
+k{3,5} = 0.75;
+k{3,6} = 0; /* - */
+k{3,7} = 0;
+k{3,8} = 0.39; /*0.34;*/
+k{3,9} = 1;
+k{3,10} = 0.06;
+k{3,11} = 15;
+k{3,12} = 30;
+k{3,13} = 1;
+k{3,14} = 0; /* - */
+k{3,15} = 0;
+
+/*****************/
+/* Red Deer Male */
+/*****************/
+k{4,1} = 1;
+k{4,2} = 2;
+k{4,3} = 0; /* - */
+k{4,4} = 20;
+k{4,5} = 0; /* - */
+k{4,6} = 0; /* - */
+k{4,7} = 0;
+k{4,8} = 0.39; /*0.34;*/
+k{4,9} = 1;
+k{4,10} = 0.36;
+k{4,11} = 24;
+k{4,12} = 48;
+k{4,13} = 0;
+k{4,14} = 0; /* - */
+k{4,15} = 0;
+
+/***************/
+/* Fallow Deer */
+/***************/
+k{5,1} = 1;
+k{5,2} = 2;
+k{5,3} = 12;
+k{5,4} = 12;
+k{5,5} = 0.55;
+k{5,6} = 0; /* - */
+k{5,7} = 0;
+k{5,8} = 0.5;
+k{5,9} = 1;
+k{5,10} = 0.06;
+k{5,11} = 2;
+k{5,12} = 4;
+k{5,13} = 0.75;
+k{5,14} = 0; /* - */
+k{5,15} = 0;
+
+/************/
+/* Roe Deer */
+/************/
+k{6,1} = 1;
+k{6,2} = 1;
+k{6,3} = 10;
+k{6,4} = 10;
+k{6,5} = 1;
+k{6,6} = 0; /* - */
+k{6,7} = 0;
+k{6,8} = 0.58;
+k{6,9} = 1;
+k{6,10} = 0.06;
+k{6,11} = 1;
+k{6,12} = 2;
+k{6,13} = 0.67;
+k{6,14} = 0; /* - */
+k{6,15} = 0;
+
+/*********/
+/* Sheep */
+/*********/
+k{7,1} = 1;
+k{7,2} = 2;
+k{7,3} = 8;
+k{7,4} = 8;
+k{7,5} = 0.75;
+k{7,6} = 0; /* - */
+k{7,7} = 0.57;
+k{7,8} = 0.15;
+k{7,9} = 0;
+k{7,10} = 0.03;
+k{7,11} = 7;
+k{7,12} = 14;
+k{7,13} = 0.96;
+k{7,14} = 0; /* - */
+k{7,15} = 0;
+
+/************************/
+/* Initial populations  */
+/************************/
+
+/*******************/
+/* Bearded Vulture */
+/*******************/
+q{1,0} = 0;
+q{1,1} = 0;
+q{1,2} = 0;
+q{1,3} = 0;
+q{1,4} = 0;
+q{1,5} = 0;
+q{1,6} = 0;
+q{1,7} = 0;
+q{1,8} = 2;
+q{1,9} = 2;
+q{1,10} = 2;
+q{1,11} = 2;
+q{1,12} = 2;
+q{1,13} = 2;
+q{1,14} = 1;
+q{1,15} = 1;
+q{1,16} = 1;
+q{1,17} = 1;
+q{1,18} = 1;
+q{1,19} = 1;
+q{1,20} = 1;
+q{1,21} = 1;
+
+/********************/
+/* Pyrenean Chamois */
+/********************/
+q{2,0} = 0;
+q{2,1} = 741;
+q{2,2} = 740;
+q{2,3} = 668;
+q{2,4} = 667;
+q{2,5} = 667;
+q{2,6} = 596;
+q{2,7} = 594;
+q{2,8} = 518;
+q{2,9} = 517;
+q{2,10} = 444;
+q{2,11} = 444;
+q{2,12} = 444;
+q{2,13} = 373;
+q{2,14} = 373;
+q{2,15} = 372;
+q{2,16} = 296;
+q{2,17} = 296;
+q{2,18} = 252;
+q{2,19} = 0;
+q{2,20} = 0;
+q{2,21} = 0;
+
+/*******************/
+/* Red Deer Female */
+/*******************/
+q{3,0} = 0;
+q{3,1} = 167;
+q{3,2} = 133;
+q{3,3} = 107;
+q{3,4} = 85;
+q{3,5} = 68;
+q{3,6} = 41;
+q{3,7} = 33;
+q{3,8} = 26;
+q{3,9} = 21;
+q{3,10} = 17;
+q{3,11} = 13;
+q{3,12} = 11;
+q{3,13} = 9;
+q{3,14} = 7;
+q{3,15} = 5;
+q{3,16} = 4;
+q{3,17} = 3;
+q{3,18} = 0;
+q{3,19} = 0;
+q{3,20} = 0;
+q{3,21} = 0;
+
+/******************/
+/* Reed Deer Male */
+/******************/
+q{4,0} = 0;
+q{4,1} = 58;
+q{4,2} = 44;
+q{4,3} = 35;
+q{4,4} = 28;
+q{4,5} = 23;
+q{4,6} = 14;
+q{4,7} = 11;
+q{4,8} = 9;
+q{4,9} = 7;
+q{4,10} = 5;
+q{4,11} = 5;
+q{4,12} = 4;
+q{4,13} = 3;
+q{4,14} = 2;
+q{4,15} = 2;
+q{4,16} = 1;
+q{4,17} = 1;
+q{4,18} = 0;
+q{4,19} = 0;
+q{4,20} = 0;
+q{4,21} = 0;
+
+/***************/
+/* Fallow Deer */
+/***************/
+q{5,0} = 0;
+q{5,1} = 83;
+q{5,2} = 73;
+q{5,3} = 69;
+q{5,4} = 63;
+q{5,5} = 59;
+q{5,6} = 55;
+q{5,7} = 51;
+q{5,8} = 47;
+q{5,9} = 35;
+q{5,10} = 33;
+q{5,11} = 30;
+q{5,12} = 0;
+q{5,13} = 0;
+q{5,14} = 0;
+q{5,15} = 0;
+q{5,16} = 0;
+q{5,17} = 0;
+q{5,18} = 0;
+q{5,19} = 0;
+q{5,20} = 0;
+q{5,21} = 0;
+
+/***************/
+/* Roe Deer    */
+/***************/
+q{6,0} = 0;
+q{6,1} = 121;
+q{6,2} = 121;
+q{6,3} = 121;
+q{6,4} = 121;
+q{6,5} = 109;
+q{6,6} = 108;
+q{6,7} = 108;
+q{6,8} = 96;
+q{6,9} = 96;
+q{6,10} = 0;
+q{6,11} = 0;
+q{6,12} = 0;
+q{6,13} = 0;
+q{6,14} = 0;
+q{6,15} = 0;
+q{6,16} = 0;
+q{6,17} = 0;
+q{6,18} = 0;
+q{6,19} = 0;
+q{6,20} = 0;
+q{6,21} = 0;
+
+
+/*********/
+/* Sheep */
+/*********/
+q{7,0} = 0;
+q{7,1} = 20832;
+q{7,2} = 20208;
+q{7,3} = 19601;
+q{7,4} = 19014;
+q{7,5} = 18443;
+q{7,6} = 17890;
+q{7,7} = 17353;
+q{7,8} = 16659;
+q{7,9} = 0;
+q{7,10} = 0;
+q{7,11} = 0;
+q{7,12} = 0;
+q{7,13} = 0;
+q{7,14} = 0;
+q{7,15} = 0;
+q{7,16} = 0;
+q{7,17} = 0;
+q{7,18} = 0;
+q{7,19} = 0;
+q{7,20} = 0;
+q{7,21} = 0;
+
+
+
+
+ 

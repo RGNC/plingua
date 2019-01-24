@@ -2,7 +2,7 @@
 !probabilistic_rule
 {
 	u1 ?[v1]'h -> u2 ?[v2]'h :: probability(double_t); 
-	u1 ?[v1]'h1,h2 -> u2 ?[v2]'h1,h2 :: probability(double_t); 
+	//u1 ?[v1]'h1,h2 -> u2 ?[v2]'h1,h2 :: probability(double_t); 
 }
 
 !environment_communication_rule
