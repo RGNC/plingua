@@ -5,7 +5,7 @@
 #include <formats.hpp>
 #include <parser/parser.hpp>
 #include <parser/constants.hpp>
-#include <parser/gpl.hpp>
+#include <gpl.hpp>
 #include "y.tab.h"
 
 using namespace plingua::parser;
@@ -136,11 +136,13 @@ void Parser::init(int argc, char* argv[])
 	hasStructure = false;
 	file.header = FILE_HEADER;
 	file.version = FILE_VERSION;
+	file.psystem.model.str().clear();
 	file.psystem.structure.data.clear();
 	file.psystem.rules.clear();
 	file.psystem.multisets.clear();	
 	file.psystem.features.clear();
 	patterns.clear();
+	models.clear();
 	po::options_description desc("Allowed options");
 	desc.add_options()
 	("help,h", "show this help message")

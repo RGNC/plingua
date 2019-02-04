@@ -8,6 +8,9 @@ using namespace plingua::parser;
 
 bool Parser::checkRule(Rule& rule,  const YYLTYPE& location) {
 	bool success = false;
+	if (rule.features.count("pattern")>0) {
+		return true;
+	}
 	for (auto it = patterns.begin(); it != patterns.end() && !success; ++it) {
 		const std::string& id = it->first;
 		const std::set<Rule>& rules = it->second;

@@ -7,11 +7,11 @@ int main()
 {
 	File file;
 	
-	// file.loadFromXmlFile("data.xml");
-	// file.loadFromJsonFile("data.json");
-	// file.loadFromPortableBinaryFile("data.bin");
+	//loadFromXmlFile("data.xml",file);
+	//loadFromJsonFile("data.json",file);
+	//loadFromPortableBinaryFile("data.bin",file);
 	
-	file.loadFromBinaryFile("data.bin");
+	loadFromBinaryFile("data.bin",file);
 	std::cout << file << std::endl;
 	return 0;
 	

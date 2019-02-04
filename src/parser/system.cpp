@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstring>
 #include <regex>
+#include <limits>
+#include <random.hpp>
 #include <parser/parser.hpp>
 #include <parser/node_value.hpp>
 
@@ -59,7 +61,16 @@ const NodeValue& Parser::doSystemCall(Node& sentence) {
 		} else if (name.compare("scan")==0) {
 			sentence.setValue(NodeValue(true));
 		}
-		
+	} else if (name.compare("random")==0 && n == 1) {
+		long max = arguments[0].castLong().getLong();
+		if (max<=0 || max>std::numeric_limits<unsigned>::max()) {
+			error("Invalid parameter for random<1>",sentence.getLocation());
+			sentence.setValue(GENERIC_ERROR);
+		} else {
+			long aux = (long)RANDOM((unsigned)max);
+			sentence.setValue(NodeValue(aux,false));
+		}
+			
 	} else if (name.compare("cos")==0 && n==1) {
 		double aux = std::cos(arguments[0].castDouble().getDouble());
 		sentence.setValue(NodeValue(aux,cte));

@@ -88,8 +88,10 @@ private:
 	void readLines(unsigned fileNumber);
 	void readIncludes(Node& node);
 	void readModules(Node& node);
+	void readModel(Node& node);
 	void readGlobalVariables(Node& node);
 	void readPatterns(Node& node);
+	void readSemantics(Node& node);
 	bool unrollPattern(Node& sentence);
 	bool unrollSentence(Node& sentence);
 	bool unrollSentenceB(Node& sentence);
@@ -105,6 +107,8 @@ private:
 	bool unrollOuterMembrane(Node& sentence, OMembrane& membrane, const std::string& patternGroup = "", const Label& defaultLabel = std::vector<LabelString>());
 	bool unrollInnerMembrane(Node& sentence, IMembrane& membrane, const std::string& patternGroup = "", const Label& defaultLabel = std::vector<LabelString>(), bool flag = true) ;
 	bool unrollFeatures(Node& node, Features& features, bool pattern);
+	void unrollSemantics(Node& node);
+	bool unrollSemanticsBody(Node& node, Semantics& semantics,unsigned value, std::set<std::string>& patterns);
 	bool unrollSentences(Node& sentence);
 	bool unrollReturn(Node& sentence);
 	bool unrollIf(Node& sentence);
@@ -112,6 +116,7 @@ private:
 	bool unrollDoWhile(Node& sentence);
 	bool unrollFor(Node& sentence);
 	void extendMembrane(const Label& label, const Membrane& innerMembrane, Membrane& membrane);
+	
 	const NodeValue& doCall(Node& sentence);
 	const NodeValue& doSystemCall(Node& sentence);
 	
@@ -130,7 +135,7 @@ private:
 	void finishMessage() const;	
 	bool checkData();
 	bool generateOutput();
-
+	bool addSemantics();
 
 	bool checkRule(Rule& rule,  const YYLTYPE& location);
 	bool matchRule(const Rule& rule, const Rule& pattern);
@@ -164,6 +169,8 @@ private:
 	Memory memory;
 	std::map<std::string, Node*> modules;
 	std::map<std::string, std::set<Rule>> patterns;
+	std::map<std::string, Semantics> models;
+	
 	bool hasStructure;
 	File file;
 	

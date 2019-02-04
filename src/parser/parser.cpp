@@ -77,6 +77,14 @@ void Parser::addNode(Node* node)
 	}
 	
 	if (errorCounter==0) {
+		readSemantics(*node);
+	}
+		
+	if (errorCounter==0) {
+		readModel(*node);
+	}
+	
+	if (errorCounter==0) {
 		root.addChild(node);
 	}
 }
@@ -178,6 +186,33 @@ bool Parser::findMembrane(const Label& label, const Membrane& membrane)
 	return false;
 }
 
+bool Parser::addSemantics()
+{
+	if (file.psystem.model.str().empty()) {
+		error("no model defined",LEVEL_WARNING);
+		patterns.clear();
+		return true;
+	}
+	if (models.count(file.psystem.model.str())==0) {
+		std::string buffer = "undefined model '"+file.psystem.model.str()+"'";
+		error(buffer.c_str());
+		return false;
+	}
+	file.psystem.semantics = models.at(file.psystem.model.str());
+	std::set<String> aux;
+	file.psystem.semantics.getAllPatterns(aux);
+	auto it = patterns.begin();
+	while (it != patterns.end()) {
+		String s(it->first);
+		if (aux.count(s)>0) {
+			++it;
+		} else {
+			it = patterns.erase(it);
+		}
+	}
+	return true;
+}
+
 
 bool Parser::checkData()
 {
@@ -240,9 +275,10 @@ int Parser::parse(int argc, char* argv[])
 		}while(!feof(yyin));
 		fclose(yyin);
 	}
-	if (errorCounter==0 && root.size()>0 && 
+	if (errorCounter==0 && root.size()>0 &&
+		   addSemantics() &&
 	       unrollSentence(mainCall) && 
-	       errorCounter==0 && checkData()) {
+	       errorCounter==0 && checkData() ) {
 		generateOutput();
 	}
 	if (verbosityLevel>=LEVEL_DEBUG_2) {
@@ -354,6 +390,17 @@ void Parser::readIncludes(Node& node)
 	}
 }
 
+void Parser::readSemantics(Node& node)
+{
+	for (int i=0;i<node.size(); i++) {
+		if (node[i].getType()==MODEL_DEFINITION) {
+			unrollSemantics(node[i]);
+		}
+	}
+}
+
+
+
 void Parser::readModules(Node& node)
 {
 	std::string buffer,aux;
@@ -379,6 +426,25 @@ void Parser::readGlobalVariables(Node& node)
 	}
 }
 
+
+void Parser::readModel(Node& node)
+{
+	for (int i=0;i<node.size();i++) {
+		
+		if (node[i].getType() != MODEL) {
+			continue;
+		}
+		if (!file.psystem.model.str().empty()) {
+			error("duplicated model declaration",node[i].getLocation());
+		} else {
+			file.psystem.model =  node[i][0].getValue().getString();
+			std::string buffer = "Using model '"+file.psystem.model.str()+"'";
+			error(buffer.c_str(),LEVEL_DEBUG_1);
+		}
+	}
+	
+}
+
 void Parser::readPatterns(Node& node)
 {
 	for (int i=0; i< node.size(); i++) {
@@ -399,6 +465,44 @@ bool Parser::unrollPattern(Node& node)
 	return success;
 }
 
+void Parser::unrollSemantics(Node& node)
+{
+	std::string id = node[0].getValue().getString();
+	if (models.count(id)) {
+		error("duplicated model definition",node[0].getLocation());
+	}
+	Semantics semantics;
+	std::set<std::string> patterns;
+	if (unrollSemanticsBody(node[1],semantics,std::numeric_limits<unsigned>::max(),patterns)) {
+		models[id] = semantics;
+	} 
+}
+
+bool Parser::unrollSemanticsBody(Node& node, Semantics& semantics, unsigned value, std::set<std::string>& patterns)
+{
+	bool success = true;
+	for (int i=0;i< node.size(); i++) {
+		if (node[i].getType()==ID) {
+			std::string pattern = node[i].getValue().getString();
+			if (patterns.count(pattern)>0) {
+				error("duplicated pattern",node[i].getLocation());
+				success = false;
+			}
+			semantics.patterns.emplace(pattern);
+		} else if (node[i].getType()==MODEL_ELEMENT) {
+			Semantics child;
+			child.value = (unsigned)node[i][0].getValue().getLong();
+			if (child.value==0 || child.value > value) {
+				error("invalid bound",node[i][0].getLocation());
+				success = false;
+			}
+			child.inf = false;
+			success = unrollSemanticsBody(node[i][1],child,child.value,patterns) ? success : false;
+			semantics.childs.push_back(child);
+		}
+	}
+	return success;
+}
 
 
 bool Parser::unrollSentence(Node& sentence)

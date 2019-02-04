@@ -33,6 +33,21 @@ public:
 	long as_long() const				{return value_.longValue;}
 	double as_double() const			{return value_.doubleValue;}
 	const char* as_string() const 		{return value_.stringValue;} 
+	
+	long cast_long() const {
+		switch(type_) {
+			case CHAR:  return (long)(value_.charValue);
+			case UCHAR:  return (long)(value_.ucharValue);
+			case SHORT:  return (long)(value_.shortValue);
+			case USHORT:  return (long)(value_.ushortValue);
+			case INT:  return (long)(value_.intValue);
+			case UINT:  return (long)(value_.uintValue);
+			case LONG:  return value_.longValue;
+			default: return 0;
+		}
+		
+		
+	}
 		
 	Value& operator =(char value);
 	Value& operator =(unsigned char value);
@@ -101,11 +116,14 @@ public:
 	std::string& str() {return str_;}
 	
 	bool operator ==(const String& other) const       {return str_ == other.str_;}
+	bool operator !=(const String& other) const       {return str_ != other.str_;}
 	bool operator  <(const String& other) const       {return str_ < other.str_;}	
+
+	template<class A> void save(A& archive) const;
+	template<class A> void load(A& archive);
 
 private:
 	std::string str_;
-	
 };
 
 class LabelString : public String
@@ -183,7 +201,7 @@ public:
 	template<class A> void serialize(A& archive);
 };
 
-// INNER MEMBRANE CLASS (ONLY FOR RULES)
+// INNER MEMBRANE CLASS 
 class IMembrane : public LeafMembrane {
 public:
 	Multiset multiset;
@@ -239,33 +257,65 @@ public:
 	template<class A> void serialize(A& archive);
 };
 
+
+// SEMANTICS CLASS
+class Semantics{
+public:	
+	std::size_t value;
+	bool inf;
+	std::set<String> patterns;
+	std::vector<Semantics> childs;
+	Semantics() : value(0),inf(true) {}
+	void getAllPatterns(std::set<String>& allPatterns) const;
+	bool operator==(const Semantics& other) const;
+	bool operator<(const Semantics& other) const;
+	template<class A> void serialize(A& archive);
+};
+
+// CONFIGURATION MEMBRANE
+class CMembrane : public IMembrane
+{
+public:
+	int parent;              // index of the parent membrane (-1 if root membrane)
+	std::vector<int> childs; // indexes of the child membranes
+	long priorityLevel;   
+	Semantics semantics;
+	CMembrane() : parent(-1), priorityLevel(0) {}
+	template<class A> void serialize(A& archive);
+};
+
+// P SYSTEM CONFIGURATION 
+class Configuration
+{
+public:
+	unsigned long time;               // current time stamp, 0 for initial configuration.
+	Multiset environment;             // environment multiset
+	std::vector<CMembrane> membranes; // All the membranes in the configuration
+	Configuration() : time(0) {}
+	void clear();
+	template<class A> void serialize(A& archive);
+};
+
 // P SYSTEM CLASS
 class Psystem {
 public:
+	String model;						 // model
 	Membrane structure;                  // initial membrane structure 
-	std::map<Label, Multiset> multisets;  // initial multisets 
-	std::set<Rule> rules;		         // rules 	
-	Features features; // extension features (multienvironment, confluent, etc...)
+	std::map<Label, Multiset> multisets; // initial multisets 
+	std::set<Rule> rules;		         // rules 
+	Semantics semantics;			     // semantics	
+	Features features;                   // extension features (multienvironment, confluent, etc...)
 	template<class A> void save(A& archive) const;
 	template<class A> void load(A& archive);
 };
 
+
+// P SYSTEM FILE CLASS
 class File {
 public:	
 	std::string header;
 	std::string version;
 	Psystem psystem;
-	
-	void loadFromJsonFile(const std::string& path);
-	void loadFromXmlFile(const std::string& path);
-	void loadFromBinaryFile(const std::string& path);
-	void loadFromPortableBinaryFile(const std::string& path);
-	
-	void saveToJsonFile(const std::string& path) const;
-	void saveToXmlFile(const std::string& path) const;
-	void saveToBinaryFile(const std::string& path) const;
-	void saveToPortableBinaryFile(const std::string& path) const;
-
 	template<class A> void serialize(A& archive);
 };
 
@@ -337,8 +387,35 @@ private:
 	std::size_t maxMultiplicity;
 };
 
+template<class T>
+void loadFromJsonFile(const std::string& path, T& data, const std::string& root = "file");
 
+template<class T>
+void loadFromXmlFile(const std::string& path, T& data, const std::string& root = "file");
 
+template<class T>
+void loadFromBinaryFile(const std::string& path, T& data, const std::string& root = "file");
+
+template<class T>
+void loadFromPortableBinaryFile(const std::string& path, T& data, const std::string& root = "file");
+
+template<class T>
+void loadFromFile(const std::string& path, T& data, const std::string& root = "file");
+
+template<class T>	
+void saveToJsonFile(const std::string& path, const T& data, const std::string& root = "file");
+
+template<class T>
+void saveToXmlFile(const std::string& path, const T& data, const std::string& root = "file");
+
+template<class T>
+void saveToBinaryFile(const std::string& path, const T& data, const std::string& root = "file");
+
+template<class T>
+void saveToPortableBinaryFile(const std::string& path, const T&data, const std::string& root = "file");
+
+template<class T>
+void saveToFile(const std::string& path, const T& data, const std::string& root = "file");
 
 }
 
@@ -348,40 +425,33 @@ std::ostream& operator <<(std::ostream& os, const plingua::String& arg);
 
 std::ostream& operator <<(std::ostream& os, const plingua::Value& arg);
 
-
 std::ostream& operator <<(std::ostream& os, const plingua::Label& arg);
-
 
 std::ostream& operator <<(std::ostream& os, const plingua::Multiset& arg);
 
-
 std::ostream& operator <<(std::ostream& os, const plingua::LeafMembrane& arg);
-
 
 std::ostream& operator <<(std::ostream& os, const plingua::Membrane& arg);
 
-
 std::ostream& operator <<(std::ostream& os, const plingua::IMembrane& arg);
-
 
 std::ostream& operator <<(std::ostream& os, const plingua::OMembrane& arg);
 
-
 std::ostream& operator <<(std::ostream& os, const plingua::HR& arg);
-
 
 std::ostream& operator <<(std::ostream& os, const plingua::LHR& arg);
 
-
 std::ostream& operator <<(std::ostream& os, const plingua::RHR& arg);
-
 
 std::ostream& operator <<(std::ostream& os, const plingua::Rule& arg);
 
+std::ostream& operator <<(std::ostream& os, const plingua::Semantics& arg);
 
 std::ostream& operator <<(std::ostream& os, const plingua::Psystem& arg);
 
 std::ostream& operator <<(std::ostream& os, const plingua::File& arg);
+
+std::ostream& operator <<(std::ostream& os, const plingua::Configuration& arg);
 
 #include "serialization.tcc"
 #endif

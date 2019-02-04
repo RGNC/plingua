@@ -28,13 +28,13 @@ bool codify(Format format, const File& file, const std::string& path)   {
 
 
 bool codifyJson(const File& file, const std::string& path)  {
-	file.saveToJsonFile(path);
+	saveToJsonFile(path,file);
 	return true;
 }
 
 
 bool codifyXml(const File& file, const std::string& path)  {
-	file.saveToJsonFile(path);
+	saveToJsonFile(path,file);
 	return true;
 }
 
@@ -47,13 +47,13 @@ bool codifyPli(const File& file, const std::string& path) {
 
 
 bool codifyBinary(const File& file, const std::string& path) {
-	file.saveToBinaryFile(path);
+	saveToBinaryFile(path,file);
 	return true;
 }
 
 
 bool codifyPortable(const File& file, const std::string& path)  {
-	file.saveToPortableBinaryFile(path);
+	saveToPortableBinaryFile(path,file);
 	return true;
 }
 

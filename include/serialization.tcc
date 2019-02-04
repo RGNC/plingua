@@ -134,6 +134,19 @@ void Value::clear() {
 	}
 }
 
+template<class A>
+void String::save(A& archive) const {
+	ALPHABET.getStringId(str_).save(archive);
+}
+
+template<class A> 
+void String::load(A& archive) {
+	UId aux(archive, ALPHABET.getStringsAlphabetSize());
+	str_ = ALPHABET.getString(aux.getId()); 
+}
+
+
+
 template<class A> 
 void Value::save(A& archive) const {
 	
@@ -516,6 +529,27 @@ void Membrane::serialize(A& archive) {
 }
 
 
+template<class A>
+void CMembrane::serialize(A& archive) {
+	IMembrane::serialize(archive);
+	archive(cereal::make_nvp("parent",parent));
+	archive(cereal::make_nvp("childs",childs));
+}
+
+template<class A>
+void Configuration::serialize(A& archive) {
+	archive(cereal::make_nvp("time",time));
+	archive(cereal::make_nvp("environment",environment));
+	archive(cereal::make_nvp("membranes",membranes));
+}
+
+inline
+void Configuration::clear() {
+	time = 0;
+	environment.clear();
+	membranes.clear();
+}
+
 inline
 bool IMembrane::operator ==(const IMembrane& other) const {
 	return LeafMembrane::operator ==(other) && multiset == other.multiset;
@@ -644,6 +678,15 @@ void Alphabet::load(const Psystem& psystem)  {
 			strings[it->second.as_string()] = 0;
 		}
 	}
+	if (!psystem.model.str().empty()) {
+		strings[psystem.model.str()] = 0;
+		std::set<String> aux;
+		psystem.semantics.getAllPatterns(aux);
+		for (auto it=aux.begin(); it!=aux.end();++it) {
+			strings[it->str()] = 0;
+		}
+	}
+	
 	sort();
 }
 
@@ -829,11 +872,21 @@ void Alphabet::load(A& archive) {
 	}    
 }
 
+template<class A>
+void Semantics::serialize(A& archive) {
+	archive(cereal::make_nvp("value", value));
+	archive(cereal::make_nvp("inf",inf));
+	archive(cereal::make_nvp("patterns", patterns));
+	archive(cereal::make_nvp("childs", childs));
+}
+
 
 template<class A>
 void Psystem::save(A& archive) const {
 	ALPHABET.load(*this);
 	ALPHABET.save(archive);
+	archive(cereal::make_nvp("model", model));
+	archive(cereal::make_nvp("semantics", semantics));
 	archive(cereal::make_nvp("structure", structure));
 	archive(cereal::make_nvp("multisets", multisets));
 	archive(cereal::make_nvp("rules",rules));
@@ -844,6 +897,8 @@ void Psystem::save(A& archive) const {
 template<class A>
 void Psystem::load(A& archive) {
 	ALPHABET.load(archive);
+	archive(cereal::make_nvp("model",model));
+	archive(cereal::make_nvp("semantics", semantics));
 	archive(cereal::make_nvp("structure", structure));
 	archive(cereal::make_nvp("multisets", multisets));
 	archive(cereal::make_nvp("rules",rules));
@@ -857,60 +912,117 @@ void File::serialize(A& archive) {
 			cereal::make_nvp("psystem", psystem));
 }
 
-inline
-void File::loadFromJsonFile(const std::string& path) {
+template<class T>
+void loadFromJsonFile(const std::string& path, T& data, const std::string& root) {
 	std::ifstream is(path);
     cereal::JSONInputArchive archive(is);
-    archive(cereal::make_nvp("file",*this));
+    archive(cereal::make_nvp(root,data));
 }
 
-inline
-void File::loadFromXmlFile(const std::string& path) {
+template<class T>
+void loadFromXmlFile(const std::string& path, T& data, const std::string& root) {
 	std::ifstream is(path);
     cereal::XMLInputArchive archive(is);
-    archive(cereal::make_nvp("file",*this));
+    archive(cereal::make_nvp(root,data));
 }
 
-inline
-void File::loadFromBinaryFile(const std::string& path) {
+template<class T>
+void loadFromBinaryFile(const std::string& path, T& data, const std::string& root) {
 	std::ifstream is(path, std::ios::binary);
 	cereal::BinaryInputArchive archive(is);
-	archive(cereal::make_nvp("file",*this));
+	archive(cereal::make_nvp(root,data));
 }
 
-inline
-void File::loadFromPortableBinaryFile(const std::string& path) {
+template<class T>
+void loadFromPortableBinaryFile(const std::string& path, T& data, const std::string& root) {
 	std::ifstream is(path, std::ios::binary);
 	cereal::PortableBinaryInputArchive archive(is);
-	archive(cereal::make_nvp("file",*this));
+	archive(cereal::make_nvp(root,data));
 }
 
-inline	
-void File::saveToJsonFile(const std::string& path) const{
+template<class T>
+void loadFromFile(const std::string& path, T& data, const std::string& root) {
+	unsigned pos = path.find_last_of('.');
+	std::string extension = pos == std::string::npos ? "" : path.substr(pos);
+	if (extension == ".xml") {
+		loadFromXmlFile(path,data,root);
+	} else if (extension == ".json") {
+		loadFromJsonFile(path,data,root);
+	} else if (extension == ".bin") {
+		loadFromBinaryFile(path,data,root);
+	} else if (extension == ".bin2") {
+		loadFromPortableBinaryFile(path,data,root);
+	} else {
+		throw std::invalid_argument("Invalid file extension (only .xml .json .bin .bin2 are allowed)");
+	}
+}
+
+template<class T>	
+void saveToJsonFile(const std::string& path, const T& data, const std::string& root) {
 	std::ofstream os(path);
     cereal::JSONOutputArchive archive(os);
-    archive(cereal::make_nvp("file",*this));
+    archive(cereal::make_nvp(root,data));
 }
 
-inline
-void File::saveToXmlFile(const std::string& path) const{
+template<class T>
+void saveToXmlFile(const std::string& path, const T& data, const std::string& root) {
 	std::ofstream os(path);
     cereal::XMLOutputArchive archive(os);
-	archive(cereal::make_nvp("file",*this));
+	archive(cereal::make_nvp(root,data));
 }
 
-inline
-void File::saveToBinaryFile(const std::string& path) const {
+template<class T>
+void saveToBinaryFile(const std::string& path, const T& data, const std::string& root) {
 	std::ofstream os(path, std::ios::binary);
 	cereal::BinaryOutputArchive archive( os );
-	archive(cereal::make_nvp("file",*this));
+	archive(cereal::make_nvp(root,data));
+}
+
+template<class T>
+void saveToPortableBinaryFile(const std::string& path, const T& data, const std::string& root) {
+	std::ofstream os(path, std::ios::binary);
+	cereal::PortableBinaryOutputArchive archive(os);
+	archive(cereal::make_nvp(root,data));
+}
+
+template<class T>
+void saveToFile(const std::string& path, const T& data, const std::string& root) {
+	unsigned pos = path.find_last_of('.');
+	std::string extension = pos == std::string::npos ? "" : path.substr(pos);
+	if (extension == ".xml") {
+		saveToXmlFile(path,data,root);
+	} else if (extension == ".json") {
+		saveToJsonFile(path,data,root);
+	} else if (extension == ".bin") {
+		saveToBinaryFile(path,data,root);
+	} else if (extension == ".bin2") {
+		saveToPortableBinaryFile(path,data,root);
+	} else {
+		throw std::invalid_argument("Invalid file extension (only .xml .json .bin .bin2 are allowed)");
+	}
+}
+
+
+inline
+void Semantics::getAllPatterns(std::set<String>& allPatterns) const
+{
+	allPatterns.insert(patterns.begin(),patterns.end());
+	for (auto it = childs.begin(); it != childs.end(); ++it) {
+		it->getAllPatterns(allPatterns);
+	}
 }
 
 inline
-void File::saveToPortableBinaryFile(const std::string& path) const {
-	std::ofstream os(path, std::ios::binary);
-	cereal::PortableBinaryOutputArchive archive(os);
-	archive(cereal::make_nvp("file",*this));
+bool Semantics::operator==(const Semantics& other) const {
+	return value == other.value && inf == other.inf && patterns == other.patterns && childs == other.childs;
+}
+
+inline
+bool Semantics::operator<(const Semantics& other) const {
+	return value < other.value ||
+		(value == other.value && !inf && other.inf) ||
+		(value == other.value && inf == other.inf && patterns < other.patterns) ||
+		(value == other.value && inf == other.inf && patterns == other.patterns && childs < other.childs);
 }
 
 }
@@ -1028,6 +1140,46 @@ std::ostream& operator <<(std::ostream& os, const plingua::RHR& arg) {
 }
 
 inline
+std::ostream& operator <<(std::ostream& os, const plingua::Semantics& arg) {
+	
+	if (!arg.inf) {
+		os << "@" << arg.value << "{";
+	}
+	auto it1 = arg.patterns.begin();
+	if (it1 != arg.patterns.end()) {
+		os << *it1;
+		++it1;
+	}
+	
+	while (it1!=arg.patterns.end()) {
+		os << ", "<< *it1;
+		++it1;
+	}
+	
+	auto it2 = arg.childs.begin();
+	if (it2 != arg.childs.end()) {
+		if (arg.patterns.size() > 0) {
+			os << ", ";
+		}
+		os << *it2;
+		++it2;
+	}
+	
+	while (it2 != arg.childs.end()) {
+		os << ", " << *it2;
+		++it2;
+	}
+			
+		
+	if (!arg.inf) {
+		os << "}";
+	}
+	
+	return os;
+}
+
+
+inline
 std::ostream& operator <<(std::ostream& os, const plingua::Rule& arg) {
 	os << arg.lhr << " ";
 	switch(arg.arrow) {
@@ -1038,34 +1190,65 @@ std::ostream& operator <<(std::ostream& os, const plingua::Rule& arg) {
 	os << " " << arg.rhr;
 	auto it = arg.features.begin();
 	if (it!=arg.features.end()) {
-		if ( (it->second.type()==plingua::Value::Type::CHAR && it->second.as_char() == 1) ||
-		     (it->second.type()==plingua::Value::Type::UCHAR && it->second.as_uchar() == 1)) {
-			os << " @ " << it->first;	 
-		} else {
-			os << " @ " << it->first << " = " << it->second;
-		}
+		os << " @ " << it->first << " = " << it->second;
 		while (++it != arg.features.end()) {
-			if ( (it->second.type()==plingua::Value::Type::CHAR && it->second.as_char() == 1) ||
-		     (it->second.type()==plingua::Value::Type::UCHAR && it->second.as_uchar() == 1)) {
-				os << ", " << it->first;	 
-			} else {
-				os << ", " << it->first << " = " << it->second;
-			}
+			os << ", " << it->first << " = " << it->second;
 		}
 	}
 	return os;
 }
 
 inline
+std::ostream& operator <<(std::ostream& os, const plingua::Configuration& arg)
+{
+	os << "CONFIGURATION: "<< arg.time << "\n";
+	
+	os << "\n" << "Environment: ";
+	if (arg.environment.empty()) {
+		os << "#\n";
+	} else {
+		os << arg.environment << "\n";
+	}
+	
+	for (unsigned i=0;i<arg.membranes.size(); i++) {
+		if (arg.membranes[i].parent == -2) {
+			continue;
+		}
+		os << "\n";
+		if (arg.membranes[i].parent == -1) {
+			os << "SKIN ";
+		}
+		os << "MEMBRANE ID: "<< i << ", Label: "<< 
+		                   arg.membranes[i].label << ", Charge: " << 
+		                   (arg.membranes[i].charge>0 ? "+" : arg.membranes[i].charge <0 ? "-":"0") << "\n";
+		
+		os << "Multiset: ";
+		
+		if (arg.membranes[i].multiset.empty()) {
+			os << "#\n";
+		} else {
+			os << arg.membranes[i].multiset << "\n";
+		}
+		
+		if (arg.membranes[i].parent != -1) {
+			os << "Parent membrane ID: " << arg.membranes[i].parent << "\n";
+		}
+	}
+	return os;
+}
+
+
+inline
 std::ostream& operator <<(std::ostream& os, const plingua::Psystem& arg) {
 	
+	if (!arg.model.str().empty()) {
+		os << "@model<" << arg.model.str() << ">\n";
+		os << "@model(" << arg.model.str() << ") =\n";
+		os << "\t"<<arg.semantics<<";\n";
+	}
+	
 	for (auto it = arg.features.begin(); it!=arg.features.end(); ++it) {
-		if ( (it->second.type()==plingua::Value::Type::CHAR && it->second.as_char() == 1) ||
-		     (it->second.type()==plingua::Value::Type::UCHAR && it->second.as_uchar() == 1)) {
-			os << "\n@" << it->first << ";";	 
-		} else {
-			os << "\n@" << it->first << " = " << it->second << ";";
-		}
+		os << "\n@" << it->first << " = " << it->second << ";";
 	}
 	os << (arg.features.empty() ? "" : "\n");	
 	os << "\ndef main()\n{\n  @mu = " << arg.structure << ";\n";

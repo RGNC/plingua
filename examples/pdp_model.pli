@@ -14,4 +14,4 @@
 }
 
 
-@model(pdp) = skeleton_rule,communication_rule;
+@model(probabilistic) = skeleton_rule,communication_rule;
