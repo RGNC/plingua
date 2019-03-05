@@ -42,3 +42,8 @@ obj
 *.bin
 *.json
 *.xml
+
+# Flex and Bison generated files
+lex.yy.c
+y.tab.c
+y.tab.h
