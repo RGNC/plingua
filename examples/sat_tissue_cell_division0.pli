@@ -1,4 +1,4 @@
-@model<tissue_psystems>
+@model<tissue_division>
 @include "tissue_division_model.pli"
 def main()
 {

@@ -1,37 +1,19 @@
 @model<probabilistic>
+@include "pdp_model.pli"
 
-def main()
+N = 10; // Number of environments
+M = 7 ; // Number of species
+
+
+def main() 
 {
-  call tritrophic(10,7);
-}
-
-
-def tritrophic(N,M) /* N entornos y M especies */
-{
-  /***********************************/
-  /* Estructura inicial de membranas */
-  /***********************************/
-  /* Tenemos 10 entornos 101..110, los entornos se representan
-     en P-Lingua como membranas especiales con dos identificadores,
-     el primero es la etiqueta de la membrana y el segundo es la etiqueta
-     del entorno, por ejemplo: 101,101. Todas las membranas dentro
-     de un entorno determinado heredan el mismo id de entorno.
-     El esqueleto es [[]'1]'0, cada uno de los 10 esqueletos
-     se encuentra en un entorno diferente */
-  
-  @mu= [
-           [[[]'1]'0]'101,101  
-           [[[]'1]'0]'102,102 
-           [[[]'1]'0]'103,103
-           [[[]'1]'0]'104,104  
-           [[[]'1]'0]'105,105 
-           [[[]'1]'0]'106,106
-           [[[]'1]'0]'107,107  
-           [[[]'1]'0]'108,108 
-           [[[]'1]'0]'109,109
-           [[[]'1]'0]'110,110
-        ]'p;
-
+  /*******************************/
+  /* Initial membrane structure  */
+  /*******************************/
+   
+  @mu = []'p;
+  @mu(p) += [[[]'1]'0]'{k},{k} :  101 <= k <= (100+N); 
+   
 
 
   /****************************/
@@ -125,6 +107,34 @@ def tritrophic(N,M) /* N entornos y M especies */
   /*r26*/ [Xp{i}]'1-->[#]'1 :: 1 : 2<=i<=M;
 	
   /*r27*/ [G]'1-->[#]'1::1;
-	
 
 }
+
+// Initial grass 
+q{1,j} = 1000 + random(1000) : 1<=j<=N;
+
+// Initial species
+q{i,j} = 100 + random(100) : 2<=i<=M, 1<=j<=N;
+
+// Grass parameters
+h{1} = 2920;
+h{2} = 4390;
+h{3} = 5475;
+m{1} = 0.25;
+m{2} = 0.6;
+m{3} = 0.15;
+
+// Offsprings
+d{i} =  1 + random(2) : 1<=i<=M;
+
+// Reproduction
+k{i,1} = random(1000)/1000 : 2<=i<=M;
+
+
+f{i} = 20 + random(80) : 2<=i<=M-1;
+f{M} = 5+ random(5);
+
+k{i,2} = random(1000)/1000 : 2<=i<=M;
+
+p{k,r,i} = 1/N : 1<=k<=N,1<=r<=N,1<=i<=M;
+
