@@ -18,9 +18,11 @@ RM=rm
 FLEX=flex
 BISON=bison
 
-all: compiler simulator
+all: grammar compiler simulator
 
-compiler: y.tab.c lex.yy.c $(OBJ_PLINGUA) $(BIN_PLINGUA) 
+grammar: y.tab.c lex.yy.c
+
+compiler: $(OBJ_PLINGUA) $(BIN_PLINGUA) 
 
 simulator: $(OBJ_PSIM) $(BIN_PSIM)
 
@@ -68,7 +70,7 @@ lex.yy.c: $(SDIR)/parser/plingua.l
 	$(FLEX) -o $(SDIR)/parser/$@ $<  
 	
 clean:
-	$(RM) $(patsubst %,$(ODIR)/%,$(OBJ_PLINGUA)) $(patsubst %,$(ODIR)/%,$(OBJ_PSIM)) $(BDIR)/$(BIN_PLINGUA)  $(BDIR)/$(BIN_PSIM)
+	$(RM) $(patsubst %,$(ODIR)/%,$(OBJ_PLINGUA)) $(patsubst %,$(ODIR)/%,$(OBJ_PSIM)) $(BDIR)/$(BIN_PLINGUA)  $(BDIR)/$(BIN_PSIM) $(SDIR)/parser/y.tab.c $(SDIR)/parser/y.tab.h $(SDIR)/parser/lex.yy.c
 	
 install:
 	@mkdir -p /usr/local/PLingua/$(BIN_PLINGUA)/
