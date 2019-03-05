@@ -450,22 +450,14 @@ bool ExtendedVector<T>::operator<(const ExtendedVector<T>& other) const {
 	if (data.size() < other.data.size()) {
 		return true;
 	}
-	if (!data.empty() && data.size() == other.data.size()) {
-		std::vector<T> aux0(data);
-		std::vector<T> aux1(other.data);
-		std::sort(aux0.begin(),aux0.end());
-		std::sort(aux1.begin(),aux1.end());
-		unsigned c=0;
-		for (unsigned i=0; i<data.size(); ++i) {
-			if (aux0[i]==aux1[i]) {
-				++c;
-			} else if (!(aux0[i]<aux1[i])) {
-				return false;
-			}
-		}
-		return c<data.size();
+	if (data.size() > other.data.size()) {
+		return false;
 	}
-	return false;
+	std::vector<T> aux0(data);
+	std::vector<T> aux1(other.data);
+	std::sort(aux0.begin(),aux0.end());
+	std::sort(aux1.begin(),aux1.end());
+	return aux0 < aux1; 
 }
 
 inline
@@ -525,7 +517,7 @@ bool Membrane::operator<(const Membrane& other) const {
 template<class A> 
 void Membrane::serialize(A& archive) {
 	LeafMembrane::serialize(archive);
-	archive(cereal::make_nvp("childs",ExtendedVector<Membrane>::data));
+	archive(cereal::make_nvp("children",ExtendedVector<Membrane>::data));
 }
 
 
@@ -533,7 +525,7 @@ template<class A>
 void CMembrane::serialize(A& archive) {
 	IMembrane::serialize(archive);
 	archive(cereal::make_nvp("parent",parent));
-	archive(cereal::make_nvp("childs",childs));
+	archive(cereal::make_nvp("children",children));
 }
 
 template<class A>
@@ -582,7 +574,7 @@ bool OMembrane::operator<(const OMembrane& other) const {
 template<class A> 
 void OMembrane::serialize(A& archive) {
 	IMembrane::serialize(archive);
-	archive(cereal::make_nvp("childs",ExtendedVector<IMembrane>::data));
+	archive(cereal::make_nvp("children",ExtendedVector<IMembrane>::data));
 }
 
 
@@ -877,7 +869,7 @@ void Semantics::serialize(A& archive) {
 	archive(cereal::make_nvp("value", value));
 	archive(cereal::make_nvp("inf",inf));
 	archive(cereal::make_nvp("patterns", patterns));
-	archive(cereal::make_nvp("childs", childs));
+	archive(cereal::make_nvp("children", children));
 }
 
 
@@ -1007,14 +999,14 @@ inline
 void Semantics::getAllPatterns(std::set<String>& allPatterns) const
 {
 	allPatterns.insert(patterns.begin(),patterns.end());
-	for (auto it = childs.begin(); it != childs.end(); ++it) {
+	for (auto it = children.begin(); it != children.end(); ++it) {
 		it->getAllPatterns(allPatterns);
 	}
 }
 
 inline
 bool Semantics::operator==(const Semantics& other) const {
-	return value == other.value && inf == other.inf && patterns == other.patterns && childs == other.childs;
+	return value == other.value && inf == other.inf && patterns == other.patterns && children == other.children;
 }
 
 inline
@@ -1022,7 +1014,7 @@ bool Semantics::operator<(const Semantics& other) const {
 	return value < other.value ||
 		(value == other.value && !inf && other.inf) ||
 		(value == other.value && inf == other.inf && patterns < other.patterns) ||
-		(value == other.value && inf == other.inf && patterns == other.patterns && childs < other.childs);
+		(value == other.value && inf == other.inf && patterns == other.patterns && children < other.children);
 }
 
 }
@@ -1156,8 +1148,8 @@ std::ostream& operator <<(std::ostream& os, const plingua::Semantics& arg) {
 		++it1;
 	}
 	
-	auto it2 = arg.childs.begin();
-	if (it2 != arg.childs.end()) {
+	auto it2 = arg.children.begin();
+	if (it2 != arg.children.end()) {
 		if (arg.patterns.size() > 0) {
 			os << ", ";
 		}
@@ -1165,7 +1157,7 @@ std::ostream& operator <<(std::ostream& os, const plingua::Semantics& arg) {
 		++it2;
 	}
 	
-	while (it2 != arg.childs.end()) {
+	while (it2 != arg.children.end()) {
 		os << ", " << *it2;
 		++it2;
 	}

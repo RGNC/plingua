@@ -115,9 +115,9 @@ public:
 	const std::string& str() const {return str_;}
 	std::string& str() {return str_;}
 	
-	bool operator ==(const String& other) const       {return str_ == other.str_;}
-	bool operator !=(const String& other) const       {return str_ != other.str_;}
-	bool operator  <(const String& other) const       {return str_ < other.str_;}	
+	virtual bool operator ==(const String& other) const       {return str_ == other.str_;}
+	virtual bool operator !=(const String& other) const       {return str_ != other.str_;}
+	virtual bool operator  <(const String& other) const       {return str_ < other.str_;}	
 
 	template<class A> void save(A& archive) const;
 	template<class A> void load(A& archive);
@@ -264,7 +264,7 @@ public:
 	std::size_t value;
 	bool inf;
 	std::set<String> patterns;
-	std::vector<Semantics> childs;
+	std::vector<Semantics> children;
 	Semantics() : value(0),inf(true) {}
 	void getAllPatterns(std::set<String>& allPatterns) const;
 	bool operator==(const Semantics& other) const;
@@ -277,7 +277,7 @@ class CMembrane : public IMembrane
 {
 public:
 	int parent;              // index of the parent membrane (-1 if root membrane)
-	std::vector<int> childs; // indexes of the child membranes
+	std::vector<int> children; // indexes of the child membranes
 	long priorityLevel;   
 	Semantics semantics;
 	CMembrane() : parent(-1), priorityLevel(0) {}

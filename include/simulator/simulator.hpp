@@ -166,16 +166,16 @@ void Simulator::consume(CMembrane& m, const Rule& rule, std::size_t applications
 	for (const IMembrane& im : rule.lhr.membrane.data) {
 		found = false;
 		i=0;
-		while(i<m.childs.size() && !found) {
-			if (configuration.membranes[m.childs[i]].label == im.label && 
-				configuration.membranes[m.childs[i]].charge == im.charge) {
+		while(i<m.children.size() && !found) {
+			if (configuration.membranes[m.children[i]].label == im.label && 
+				configuration.membranes[m.children[i]].charge == im.charge) {
 				found = true;		
 			} else {
 				i++;
 			}
 		}
 		if (found) {
-			sub(configuration.membranes[m.childs[i]].multiset,im.multiset,applications);
+			sub(configuration.membranes[m.children[i]].multiset,im.multiset,applications);
 		}
 	}
 }
@@ -229,8 +229,8 @@ void Simulator::produce(unsigned membraneId, const OMembrane& lhrMembrane, const
 	for (const IMembrane& im : om.data) {
 		bool found = false;
 		unsigned i=0;
-		while(i<m.childs.size() && !found) {
-			if (configuration.membranes[m.childs[i]].label == im.label) {
+		while(i<m.children.size() && !found) {
+			if (configuration.membranes[m.children[i]].label == im.label) {
 				found = true;		
 			} else {
 				i++;
@@ -239,11 +239,11 @@ void Simulator::produce(unsigned membraneId, const OMembrane& lhrMembrane, const
 		if (!found) {
 			throw new std::runtime_error("Unable to produce");
 		}
-		configuration.membranes[m.childs[i]].charge = im.charge;
-		add(configuration.membranes[m.childs[i]].multiset,im.multiset,applications);
-		if (configuration.membranes[m.childs[i]].multiset.count("@d")>0) {
-			configuration.membranes[m.childs[i]].multiset.erase("@d");
-			dissolving.insert(m.childs[i]);
+		configuration.membranes[m.children[i]].charge = im.charge;
+		add(configuration.membranes[m.children[i]].multiset,im.multiset,applications);
+		if (configuration.membranes[m.children[i]].multiset.count("@d")>0) {
+			configuration.membranes[m.children[i]].multiset.erase("@d");
+			dissolving.insert(m.children[i]);
 		}
 	}
 }
@@ -264,11 +264,11 @@ unsigned Simulator::copyMembrane(unsigned membraneId)
 	configuration.membranes[index].multiset = configuration.membranes[membraneId].multiset;
 	configuration.membranes[index].parent = configuration.membranes[membraneId].parent;
 	if (configuration.membranes[index].parent != -1) {
-		configuration.membranes[configuration.membranes[index].parent].childs.push_back(index);
+		configuration.membranes[configuration.membranes[index].parent].children.push_back(index);
 	}
 	
-	for (unsigned i=0;i<configuration.membranes[membraneId].childs.size(); i++) {
-		configuration.membranes[index].childs.push_back(copyMembrane(configuration.membranes[membraneId].childs[i]));
+	for (unsigned i=0;i<configuration.membranes[membraneId].children.size(); i++) {
+		configuration.membranes[index].children.push_back(copyMembrane(configuration.membranes[membraneId].children[i]));
 	}
 	
 	return index;
@@ -335,24 +335,24 @@ void Simulator::executeRules()
 		Multiset& pMs = m.parent == -1 ? configuration.environment : configuration.membranes[m.parent].multiset;
 		add(pMs,m.multiset,1);
 		if (m.parent != -1) {
-			for (unsigned i=0;i<configuration.membranes[m.parent].childs.size();i++) {
-				if (configuration.membranes[m.parent].childs[i]==(int)index) {
-					configuration.membranes[m.parent].childs[i] = configuration.membranes[m.parent].childs[configuration.membranes[m.parent].childs.size()-1];
-					configuration.membranes[m.parent].childs.resize(configuration.membranes[m.parent].childs.size()-1);
+			for (unsigned i=0;i<configuration.membranes[m.parent].children.size();i++) {
+				if (configuration.membranes[m.parent].children[i]==(int)index) {
+					configuration.membranes[m.parent].children[i] = configuration.membranes[m.parent].children[configuration.membranes[m.parent].children.size()-1];
+					configuration.membranes[m.parent].children.resize(configuration.membranes[m.parent].children.size()-1);
 					break;
 				}
 			}
 		}
-		for (unsigned i=0;i<m.childs.size();i++) {
+		for (unsigned i=0;i<m.children.size();i++) {
 			if (m.parent!=-1) {
-				configuration.membranes[m.parent].childs.push_back(m.childs[i]);
+				configuration.membranes[m.parent].children.push_back(m.children[i]);
 			}
-			configuration.membranes[m.childs[i]].parent = m.parent;
+			configuration.membranes[m.children[i]].parent = m.parent;
 		}
 		freeIndexes.push(index);
 		m.parent = -2;
 		m.multiset.clear();
-		m.childs.clear();	
+		m.children.clear();	
 	}
 	
 	
@@ -379,7 +379,7 @@ bool Simulator::updateSemantics(Semantics& semantics, const std::string& pattern
 	if (semantics.patterns.count(pattern)>0) {
 		return true;
 	}
-	for (Semantics& child : semantics.childs) {
+	for (Semantics& child : semantics.children) {
 		if (updateSemantics(child,pattern,applications)) {
 			return true;
 		}
@@ -396,7 +396,7 @@ std::size_t Simulator::getMaxApplications(const Semantics& semantics, const std:
 	if (semantics.patterns.count(pattern)>0) {
 		return semantics.inf ? std::numeric_limits<std::size_t>::max() : semantics.value;
 	}
-	for (const Semantics& child : semantics.childs) {
+	for (const Semantics& child : semantics.children) {
 		std::size_t aux = getMaxApplications(child,pattern);
 		if (aux > 0) {
 			return aux;
@@ -412,7 +412,7 @@ std::size_t Simulator::getMaxApplications(const CMembrane& m, const Rule& rule) 
 	// TODO: Rules <-->
 	const LHR& lhr = rule.lhr;
 	
-	if (m.childs.size() < lhr.membrane.data.size()) {
+	if (m.children.size() < lhr.membrane.data.size()) {
 		return 0;
 	}
 	
@@ -444,9 +444,9 @@ std::size_t Simulator::getMaxApplications(const CMembrane& m, const Rule& rule) 
 	for (const IMembrane& im : lhr.membrane.data) {
 		found = false;
 		i=0;
-		while(i<m.childs.size() && !found) {
-			if (configuration.membranes[m.childs[i]].label == im.label && 
-				configuration.membranes[m.childs[i]].charge == im.charge) {
+		while(i<m.children.size() && !found) {
+			if (configuration.membranes[m.children[i]].label == im.label && 
+				configuration.membranes[m.children[i]].charge == im.charge) {
 				found = true;		
 			} else {
 				i++;
@@ -455,7 +455,7 @@ std::size_t Simulator::getMaxApplications(const CMembrane& m, const Rule& rule) 
 		if (!found) {
 			return 0;
 		}
-		min = std::min(min,count(im.multiset,configuration.membranes[m.childs[i]].multiset));
+		min = std::min(min,count(im.multiset,configuration.membranes[m.children[i]].multiset));
 		if (min==0) {
 			return 0;
 		}	
@@ -649,7 +649,7 @@ void Simulator::initConfigurationRec(const Membrane& membrane, int parent)
 	}
 	
 	if (parent!=-1) {
-		configuration.membranes[parent].childs.push_back(index);
+		configuration.membranes[parent].children.push_back(index);
 	}
 	for (const Membrane& m : membrane.data) {
 		initConfigurationRec(m,index);

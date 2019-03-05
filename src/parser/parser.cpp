@@ -498,7 +498,7 @@ bool Parser::unrollSemanticsBody(Node& node, Semantics& semantics, unsigned valu
 			}
 			child.inf = false;
 			success = unrollSemanticsBody(node[i][1],child,child.value,patterns) ? success : false;
-			semantics.childs.push_back(child);
+			semantics.children.push_back(child);
 		}
 	}
 	return success;

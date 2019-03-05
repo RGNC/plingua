@@ -198,7 +198,7 @@ bool Parser::isSingleObjectPattern(const Multiset& multiset) {
 		return false;
 	}
 	const std::string& object = multiset.begin()->first.str();
-	return object[0]=='a' || object[0]=='b' || object[0]=='c';
+	return object[0]=='a' || object[0]=='b' || object[0]=='c' || object[0]=='d';
 }
 
 
