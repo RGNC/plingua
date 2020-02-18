@@ -89,6 +89,7 @@ private:
 inline
 void Simulator::step()
 {
+	
 	selectRules();
 	executeRules();
 	finished = selectedRules.empty() || 
@@ -157,7 +158,7 @@ void Simulator::consume(CMembrane& m, const Rule& rule, std::size_t applications
 		updateSemantics(m.semantics,rule.features.at("pattern").as_string(),applications);
 	}
 	
-	// TODO: rules <-->
+	
 	Multiset& pMs = m.parent == -1 ? configuration.environment : configuration.membranes[m.parent].multiset;
 	sub(pMs, rule.lhr.multiset, applications);
 	sub(m.multiset,rule.lhr.membrane.multiset,applications);
@@ -178,6 +179,17 @@ void Simulator::consume(CMembrane& m, const Rule& rule, std::size_t applications
 			sub(configuration.membranes[m.children[i]].multiset,im.multiset,applications);
 		}
 	}
+	
+	if (rule.arrow == 1 && rule.rhr.data[0].label[0] != "0") {
+		for (CMembrane& m : configuration.membranes) {
+			if (m.label == rule.rhr.data[0].label) {
+				sub(m.multiset, rule.rhr.data[0].multiset,applications);
+				break;
+			}
+		}
+		
+	}
+	
 }
 
 
@@ -279,6 +291,25 @@ inline
 void Simulator::produce(unsigned membraneId, const Rule& rule, std::size_t applications, std::set<unsigned>& dissolving)
 {
 	CMembrane& m = configuration.membranes[membraneId];
+	
+	
+	if (rule.arrow == 1) {
+		add(m.multiset,rule.rhr.data[0].multiset,applications);
+		for (CMembrane& m1 : configuration.membranes) {
+			if (m1.label == rule.rhr.data[0].label) {
+				if (m1.label[0]=="0") {
+					add(m1.multiset,rule.lhr.membrane.multiset,1);
+				} else {
+					add(m1.multiset,rule.lhr.membrane.multiset,applications);
+				}
+				break;
+			}
+		}
+		return;
+		
+	}
+	
+	
 	Multiset& pMs = m.parent == -1 ? configuration.environment : configuration.membranes[m.parent].multiset;
 	add(pMs,rule.rhr.multiset,applications);
 	if (rule.rhr.data.size()==0) {
@@ -299,8 +330,7 @@ void Simulator::executeRules()
 	if (selectedRules.empty()) {
 		return;
 	}
-	
-	// TODO: Rules <-->
+		
 	std::set<unsigned> dissolving;
 	
 	// First pass: no division
@@ -409,7 +439,7 @@ std::size_t Simulator::getMaxApplications(const Semantics& semantics, const std:
 
 std::size_t Simulator::getMaxApplications(const CMembrane& m, const Rule& rule) const
 {
-	// TODO: Rules <-->
+	
 	const LHR& lhr = rule.lhr;
 	
 	if (m.children.size() < lhr.membrane.data.size()) {
@@ -460,6 +490,29 @@ std::size_t Simulator::getMaxApplications(const CMembrane& m, const Rule& rule) 
 			return 0;
 		}	
 	}
+	
+	
+	if (rule.arrow==1) {
+		found = false;
+		for (const CMembrane& m : configuration.membranes) {
+			if (m.label == rule.rhr.data[0].label) {
+				found=true;
+				if (m.label[0]=="0") {
+					if (count(rule.rhr.data[0].multiset,m.multiset)==0) {
+						min=0;
+					}
+				} else {
+					min = std::min(min,count(rule.rhr.data[0].multiset,m.multiset));
+				}
+				break;
+			}
+		}
+		if (!found) {
+			min = 0;
+		}
+		
+	}
+	
 	
 	return min;
 }
@@ -528,19 +581,34 @@ bool Simulator::ruleSupportedArrow0(const Rule& rule)
 inline 
 bool Simulator::ruleSupportedArrow1(const Rule& rule)
 {
-	// TODO: Support rules with arrow <-->
-	/*
+	// <-->
+	if (!rule.lhr.multiset.empty() || !rule.rhr.multiset.empty()) {
+		return false;
+	}
+	
+		
 	if (rule.rhr.data.size()!=1) {
 		return false;
 	}
-		
+	
 	if (rule.lhr.membrane.data.size()>0 || rule.rhr.data[0].data.size()>0) {
 		return false;
 	}
 	
+	if (rule.lhr.membrane.charge!=0 || rule.rhr.data[0].charge!=0) {
+		return false;
+	}
+	
+	if (rule.lhr.membrane.label == rule.rhr.data[0].label) {
+		return false;
+	}
+	
+		
+	if (rule.lhr.membrane.multiset.count("@d")>0 || rule.rhr.data[0].multiset.count("@d")>0) {
+		return false;
+	}
+	
 	return true;
-	*/
-	return false;
 }
 
 
@@ -580,7 +648,7 @@ bool Simulator::parse(int argc, char *argv[])
 		finished = true;
 		return false;
 	}
-	
+
 	loadFromFile(getInputFile(),file);
 	
 	if (getConfigurationFile().empty()) {
@@ -593,7 +661,8 @@ bool Simulator::parse(int argc, char *argv[])
 		
 		if (!ruleSupported(rule)) {
 			 std::ostringstream ss;
-			 ss << "Rule not supported:\n"<< rule << "\n";
+			 ss << "Rule not supported: "<< rule ;
+			 std::cout << ss.str() <<std::endl;
 			 throw new std::runtime_error(ss.str());
 		}
 		ruleSets[rule.lhr.membrane.label][rule.lhr.membrane.charge].push_back(rule);

@@ -16,6 +16,7 @@ CommandLine::CommandLine()
 
 bool CommandLine::parse(int argc, char *argv[])
 {
+	
 	randomized = false;
 	verbosityLevel = 0;
 	steps = 0;
