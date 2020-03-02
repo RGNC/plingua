@@ -143,6 +143,7 @@ model_body : model_body COMMA model_element		{$$ = $1->addChild($3); $$->setLoc(
            ;
            
 model_element : AT_SYMBOL non_negative_long LBRACE model_body RBRACE {$$ = new Node(MODEL_ELEMENT,$2,$4);$$->setLoc(@1,@5);}
+              | AT_SYMBOL LBRACE model_body RBRACE {$$ = new Node(MODEL_ELEMENT,$3);$$->setLoc(@1,@4);}
               | id	{$$ = $1;}
               ;                            
 

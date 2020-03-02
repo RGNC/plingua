@@ -491,13 +491,23 @@ bool Parser::unrollSemanticsBody(Node& node, Semantics& semantics, unsigned valu
 			semantics.patterns.emplace(pattern);
 		} else if (node[i].getType()==MODEL_ELEMENT) {
 			Semantics child;
-			child.value = (unsigned)node[i][0].getValue().getLong();
-			if (child.value==0 || child.value > value) {
-				error("invalid bound",node[i][0].getLocation());
-				success = false;
+			if (node[i].size()==2) {
+				child.value = (unsigned)node[i][0].getValue().getLong();
+				if (child.value==0 || child.value > value) {
+					error("invalid bound",node[i][0].getLocation());
+					success = false;
+				}
+				child.inf = false;
+				success = unrollSemanticsBody(node[i][1],child,child.value,patterns) ? success : false;
+			} else {
+				child.value = std::numeric_limits<unsigned>::max();
+				if (child.value > value) {
+					error("invalid bound",node[i][0].getLocation());
+					success = false;
+				}
+				child.inf = true;
+				success = unrollSemanticsBody(node[i][0],child,child.value,patterns) ? success : false;
 			}
-			child.inf = false;
-			success = unrollSemanticsBody(node[i][1],child,child.value,patterns) ? success : false;
 			semantics.children.push_back(child);
 		}
 	}
