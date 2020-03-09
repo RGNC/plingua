@@ -1,0 +1,19 @@
+!tissue_communication
+{
+  [ ]'h1 <--> [a]'h2;
+  [ ]'h1 <--> [a,b]'h2;
+  [a]'h1 <--> [ ]'h2;
+  [a]'h1 <--> [b]'h2;
+  [a,b]'h1 <--> [ ]'h2;
+}
+	
+!tissue_division
+{
+  [a]'h -> [b]'h [c]'h;
+}
+
+@model(tdc2) = 
+        tissue_communication, @1{tissue_division};
+
+@bl(tissue_communication) = tissue_division;
+@bl(tissue_division) = tissue_communication;
