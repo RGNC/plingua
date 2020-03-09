@@ -166,12 +166,25 @@ bool Parser::matchLabel(const Label& rL, const Label& pL, Match& match) {
 
 bool Parser::matchMultiset(const Multiset& rMS, const Multiset& pMS, Match& match) {
 
-	if (!isSingleObjectPattern(pMS) && !isMultisetPattern(pMS)) {
+	if (!isSingleObjectPattern(pMS) && !isMultisetPattern(pMS) && !isMultiObjectPattern(pMS)) {
 		return rMS == pMS;
 	}
+
+	if (isMultiObjectPattern(pMS)) {
+		std::size_t size=0;
+		for (auto it = rMS.begin(); it!= rMS.end(); ++it) {
+			size+=it->second.raw();
+		}
+		return size == pMS.size();
+	}
+
 	if (isSingleObjectPattern(pMS) && !isSingleObject(rMS)) {
 		return false;
 	}
+	
+
+	
+	
 	const std::string& object = pMS.begin()->first.str();
 	if (object.size()==1) {
 		return true;
@@ -190,6 +203,19 @@ bool Parser::isSingleObject(const Multiset& multiset) {
 	auto it = multiset.begin();
 	std::size_t multiplicity = it->second.raw();
 	return multiplicity == 1;
+}
+
+bool Parser::isMultiObjectPattern(const Multiset& multiset) {
+	for (auto it = multiset.begin(); it!= multiset.end(); ++it) {
+		const std::string& object = it->first.str();
+		if (object[0]!='a' && object[0]!='b' && object[0]!='c' && object[0]!='d') {
+			return false;
+		}
+		if (it->second.raw() != 1) {
+			return false;
+		}
+	}
+	return multiset.size()>1;
 }
 
 

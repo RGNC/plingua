@@ -210,6 +210,20 @@ bool Parser::addSemantics()
 			it = patterns.erase(it);
 		}
 	}
+	if (!blacklist.empty()) {
+		std::string bl;
+		for (auto it = blacklist.begin();it!=blacklist.end();++it) {
+			bl+= it->first;
+			for (auto it1 = it->second.begin();it1!=it->second.end();++it1) {
+				bl+= ",";
+				bl+= *it1;
+			}
+			bl+= ";";
+		}
+		Value v = bl;
+		FeatureString id("blacklist");
+		file.psystem.features[id] = v;
+	}
 	return true;
 }
 
@@ -395,6 +409,8 @@ void Parser::readSemantics(Node& node)
 	for (int i=0;i<node.size(); i++) {
 		if (node[i].getType()==MODEL_DEFINITION) {
 			unrollSemantics(node[i]);
+		} else if (node[i].getType()==BLACK_LIST) {
+			unrollBlacklist(node[i]);
 		}
 	}
 }
@@ -478,6 +494,19 @@ void Parser::unrollSemantics(Node& node)
 	} 
 }
 
+
+void Parser::unrollBlacklist(Node& node)
+{
+	std::string id = node[0].getValue().getString();
+	if (blacklist.count(id)) {
+		error("duplicated black list",node[0].getLocation());
+	}
+	for (int i=0;i< node[1].size(); i++) {
+		blacklist[id].insert(node[1][i].getValue().getString());
+	}
+
+}
+
 bool Parser::unrollSemanticsBody(Node& node, Semantics& semantics, unsigned value, std::set<std::string>& patterns)
 {
 	bool success = true;
@@ -489,25 +518,15 @@ bool Parser::unrollSemanticsBody(Node& node, Semantics& semantics, unsigned valu
 				success = false;
 			}
 			semantics.patterns.emplace(pattern);
-		} else if (node[i].getType()==MODEL_ELEMENT) {
+		} else if (node[i].getType()==MODEL_ELEMENT ) {
 			Semantics child;
-			if (node[i].size()==2) {
-				child.value = (unsigned)node[i][0].getValue().getLong();
-				if (child.value==0 || child.value > value) {
-					error("invalid bound",node[i][0].getLocation());
-					success = false;
-				}
-				child.inf = false;
-				success = unrollSemanticsBody(node[i][1],child,child.value,patterns) ? success : false;
-			} else {
-				child.value = std::numeric_limits<unsigned>::max();
-				if (child.value > value) {
-					error("invalid bound",node[i][0].getLocation());
-					success = false;
-				}
-				child.inf = true;
-				success = unrollSemanticsBody(node[i][0],child,child.value,patterns) ? success : false;
+			child.value = (unsigned)node[i][0].getValue().getLong();
+			if (child.value==0 || child.value > value) {
+				error("invalid bound",node[i][0].getLocation());
+				success = false;
 			}
+			child.inf = false;
+			success = unrollSemanticsBody(node[i][1],child,child.value,patterns) ? success : false;
 			semantics.children.push_back(child);
 		}
 	}

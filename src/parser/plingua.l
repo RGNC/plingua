@@ -62,6 +62,7 @@ string               \"(\\.|[^"\\])*\"
 "system"				{return (SYSTEM);}
 "@include"				{return (INCLUDE);}
 "@model"				{return (MODEL);}
+"@bl"					{return (BLACK_LIST);}
 "@mu"					{return (MU);}
 "@ms"					{return (MS);}
 "@d"					{return (DISSOLUTION_SYMBOL);}

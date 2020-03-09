@@ -137,6 +137,7 @@ void Parser::init(int argc, char* argv[])
 	file.header = FILE_HEADER;
 	file.version = FILE_VERSION;
 	file.psystem.model.str().clear();
+	blacklist.clear();
 	file.psystem.structure.data.clear();
 	file.psystem.rules.clear();
 	file.psystem.multisets.clear();	

@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <set>
 #include <queue>
 #include <limits>
 #include <simulator/command_line.hpp>
@@ -74,12 +75,15 @@ private:
 	std::map<Label, std::map<char, std::vector<Rule>>> ruleSets;
 	
 		
-	std::map<unsigned, std::map<unsigned,std::size_t>> selectedRules;	
+	std::map<unsigned, std::map<unsigned,std::size_t>> selectedRules;
+	std::map<unsigned, std::set<std::string>> selectedPatterns; // selected rule patterns	
 	std::queue<unsigned> freeIndexes;	
 	Configuration configuration;
 	File file;
 	bool finished;
 	unsigned long initialTime;
+	std::map<std::string, std::set<std::string>> blacklist;
+
 	
 };	
 
@@ -102,6 +106,7 @@ void Simulator::selectRules()
 	std::size_t remainingApplications;
 	
 	selectedRules.clear();
+	selectedPatterns.clear();
 	
 	for (unsigned i = 0; i< configuration.membranes.size(); i++) {
 		configuration.membranes[i].semantics = file.psystem.semantics;
@@ -118,6 +123,21 @@ void Simulator::selectRules()
 			membranes[i].priorityLevel = std::numeric_limits<long>::max();
 			Shuffler<Rule> rules(ruleSets[membranes[i].label][membranes[i].charge],randomized);
 			for (unsigned j = 0; j< rules.size(); j++) {
+				bool aux=false;
+				if (selectedPatterns.count(membranes(i))>0 && 
+						rules[j].features.count("pattern")>0) {
+					std::string str(rules[j].features.at("pattern").as_string());		
+					if (blacklist.count(str)>0) {
+						for (auto it = blacklist.at(str).begin(); it != blacklist.at(str).end(); ++it) {
+							if (selectedPatterns.at(membranes(i)).count(*it)) {
+								aux=true;
+							}
+						}
+					}		
+				}
+				if (aux) {
+					continue;
+				}
 				std::size_t max = getMaxApplications(membranes[i],rules[j]);
 				std::size_t applications = randomized ? RANDOM(max+1) : max;
 				if (rules[j].features.count("priority")>0) {
@@ -129,6 +149,10 @@ void Simulator::selectRules()
 				}
 				if (applications>0) {
 					selectedRules[membranes(i)][rules(j)] += applications;
+					if (rules[j].features.count("pattern")>0) {
+						std::string str(rules[j].features.at("pattern").as_string());
+						selectedPatterns[membranes(i)].insert(str);
+					}
 					consume(membranes[i],rules[j],applications);
 				}
 				remainingApplications += (max - applications);
@@ -631,6 +655,20 @@ bool Simulator::ruleSupported(const Rule& rule)
 }
 
 
+template <class Container>
+void split3(const std::string& str, Container& cont,
+              char delim = ' ')
+{
+    std::size_t current, previous = 0;
+    current = str.find(delim);
+    while (current != std::string::npos) {
+        cont.push_back(str.substr(previous, current - previous));
+        previous = current + 1;
+        current = str.find(delim, previous);
+    }
+    cont.push_back(str.substr(previous, current - previous));
+}
+
 	
 inline
 bool Simulator::parse(int argc, char *argv[])
@@ -667,6 +705,21 @@ bool Simulator::parse(int argc, char *argv[])
 		}
 		ruleSets[rule.lhr.membrane.label][rule.lhr.membrane.charge].push_back(rule);
 	}	
+	
+	if (file.psystem.features.count("blacklist")>0) {
+		blacklist.clear();
+		std::string str(file.psystem.features.at("blacklist").as_string()); 
+		std::vector<std::string> cont;
+		split3(str,cont,';');
+		for (std::string& x : cont) {
+			std::vector<std::string> cont1;
+			split3(x,cont1,',');
+			for (unsigned i= 1;i<cont1.size();i++) {
+				blacklist[cont1[0]].insert(cont1[i]);	
+			}
+		}
+		
+	}
 	
 	struct {
 		inline bool operator()(const Rule& a, const Rule& b)  {

@@ -188,6 +188,7 @@ const char* Node::getTypeAsString() const
 		case CHARGE : return "CHARGE";
 		case LABEL : return "LABEL";
 		case DISSOLUTION_SYMBOL : return "DISSOLUTION_SYMBOL";
+		case AT_SYMBOL : return "AT_SYMBOL";
 		case MULTISET : return "MULTISET";
 		case PRIORITY : return "PRIORITY";
 		case PROBABILITY : return "PROBABILITY";
@@ -221,6 +222,8 @@ const char* Node::getTypeAsString() const
 	    case EMU : return "EXTEND_MU";
 	    case PROB_TYPE: return "prob_t";
 	    case REXP_TYPE: return "rexp_t";
+	    case BLACK_LIST: return "BLACK_LIST";
+	    case BLACK_LIST_BODY: return "BLACK_LIST_BODY";
 		default : return "UNKNOWN";
 		
 	}

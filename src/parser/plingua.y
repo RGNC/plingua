@@ -62,7 +62,7 @@ using namespace plingua::parser;
        INT_TYPE LONG_TYPE DOUBLE_TYPE STRING_TYPE SYSTEM_CONSTANT
        MODEL_DEFINITION MODEL_BODY MODEL_ELEMENT SYSTEM_CALL
        INNER_MEMBRANE INNER_MEMBRANES OUTER_MEMBRANE OUTER_MEMBRANES
-       RIGHT_HAND_RULE LEFT_HAND_RULE 
+       RIGHT_HAND_RULE LEFT_HAND_RULE BLACK_LIST BLACK_LIST_BODY
        
        
       
@@ -91,7 +91,7 @@ using namespace plingua::parser;
 					model_definition model_body model_element rsquare0 
 					inner_membrane inner_membranes left_outer_membrane type
 					right_outer_membranes right_outer_membrane lsquare0 charge0
-					right_hand_rule left_hand_rule extendMembraneStructure
+					right_hand_rule left_hand_rule extendMembraneStructure black_list black_list_body
 
 			
 %start plingua
@@ -107,6 +107,7 @@ definitions : definitions definition {$$ = $1->addChild($2); $$->setLoc($1,$2);}
 definition : include              			           {$$ = $1;}
 		   | model	              			           {$$ = $1;}
 		   | model_definition     			           {$$ = $1;}
+		   | black_list                                {$$ = $1;}
 		   | pattern              			           {$$ = $1;}
 		   | module	             			           {$$ = $1;}
 		   | AT_SYMBOL features SEPARATOR              {$$ = $2;}
@@ -138,12 +139,18 @@ type : INT_TYPE      {$$ = new Node(INT_TYPE); }
 model_definition : MODEL LPAR id RPAR ASIG model_body SEPARATOR {$$ = new Node(MODEL_DEFINITION, $3, $6); $$->setLoc(@1,$6);}
                  ;
                  
+black_list : BLACK_LIST LPAR id RPAR ASIG black_list_body SEPARATOR {$$ = new Node(BLACK_LIST,$3,$6); $$->setLoc(@1,@6);}
+           ;
+           
+black_list_body : black_list_body COMMA id {$$ = $1->addChild($3); $$->setLoc($1,$3);}
+                | id                       {$$ = new Node(BLACK_LIST_BODY,$1); $$->setLoc($1);}
+                ;                            
+                 
 model_body : model_body COMMA model_element		{$$ = $1->addChild($3); $$->setLoc($1,$3);}
            | model_element						{$$ = new Node(MODEL_BODY,$1); $$->setLoc($1);}
            ;
            
 model_element : AT_SYMBOL non_negative_long LBRACE model_body RBRACE {$$ = new Node(MODEL_ELEMENT,$2,$4);$$->setLoc(@1,@5);}
-              | AT_SYMBOL LBRACE model_body RBRACE {$$ = new Node(MODEL_ELEMENT,$3);$$->setLoc(@1,@4);}
               | id	{$$ = $1;}
               ;                            
 
@@ -154,8 +161,6 @@ rules : rules rule SEPARATOR    {$$ = $1->addChild($2); $$->setLoc($1,$2);}
 	  | rule SEPARATOR          {$$ = new Node(RULES,$1); $$->setLoc($1);}
 	  ;
 
-
-	  
 model : MODEL LESS_THAN id GREATER_THAN {$$ = new Node(MODEL,$3); $$->setLoc(@1,@4);}
       ;   
 

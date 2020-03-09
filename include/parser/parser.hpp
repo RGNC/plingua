@@ -108,6 +108,7 @@ private:
 	bool unrollInnerMembrane(Node& sentence, IMembrane& membrane, const std::string& patternGroup = "", const Label& defaultLabel = std::vector<LabelString>(), bool flag = true) ;
 	bool unrollFeatures(Node& node, Features& features, bool pattern);
 	void unrollSemantics(Node& node);
+	void unrollBlacklist(Node& node);
 	bool unrollSemanticsBody(Node& node, Semantics& semantics,unsigned value, std::set<std::string>& patterns);
 	bool unrollSentences(Node& sentence);
 	bool unrollReturn(Node& sentence);
@@ -152,6 +153,7 @@ private:
 
 	static bool isSingleObject(const Multiset& multiset);
 	static bool isSingleObjectPattern(const Multiset& multiset);
+	static bool isMultiObjectPattern(const Multiset& multiset);
 	static bool isMultisetPattern(const Multiset& multiset);
 
 
@@ -170,7 +172,7 @@ private:
 	std::map<std::string, Node*> modules;
 	std::map<std::string, std::set<Rule>> patterns;
 	std::map<std::string, Semantics> models;
-	
+	std::map<std::string,std::set<std::string>> blacklist;
 	bool hasStructure;
 	File file;
 	
