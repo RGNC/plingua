@@ -165,7 +165,7 @@ void Simulator::selectRules()
 		std::cout<<"STEP "<<configuration.time+1<<":\n"; 
 		for (auto it1 = selectedRules.begin(); it1 != selectedRules.end(); ++it1) {
 			CMembrane& m = configuration.membranes[it1->first];
-			std::cout << "\nMembrane ID: "<< it1->first << std::endl;
+			std::cout << "\nCompartment ID: "<< it1->first << std::endl;
 			const std::vector<Rule>& rules = ruleSets[m.label][m.charge];
 			for (auto it2 = it1->second.begin(); it2 != it1->second.end(); ++it2) {
 				std::cout<< it2->second <<" * "<< rules[it2->first] << std::endl;

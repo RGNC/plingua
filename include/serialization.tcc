@@ -1207,10 +1207,10 @@ std::ostream& operator <<(std::ostream& os, const plingua::Configuration& arg)
 			continue;
 		}
 		os << "\n";
-		if (arg.membranes[i].parent == -1) {
+		/*if (arg.membranes[i].parent == -1) {
 			os << "SKIN ";
-		}
-		os << "MEMBRANE ID: "<< i << ", Label: "<< 
+		}*/
+		os << "COMPARTMENT ID: "<< i << ", Label: "<< 
 		                   arg.membranes[i].label << ", Charge: " << 
 		                   (arg.membranes[i].charge>0 ? "+" : arg.membranes[i].charge <0 ? "-":"0") << "\n";
 		
