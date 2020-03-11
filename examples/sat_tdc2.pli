@@ -19,18 +19,19 @@ def sat_tdc2(n,p)
 def init_cells(n,p)
 {
 	@mu = [ ]'0;
-	@mu(0) += [ ]'{i} : 1<= i <= n*p + 4;
+	@mu(0) += [ ]'{i} : 1<= i <= n*p + 3;
 }
 
 def init_multisets(n,p)
 {
 	@ms(0) += alpha{k} : n*p <= k <= 2*n*p+2;
-	@ms(0) += beta{k} : 1<= k <=2*n*p+5;
+	@ms(0) += beta{k} : 1<= k <=2*n*p+4;
 	@ms(0) += gamma{k} : 1<= k <= 2*n*p+5;
 	@ms(0) += x{i,j,k}, nx{i,j,k}, sx{i,j,k} : 1<=i<=n,1<=j<=p,n*p+1<=k<=2*n*p;
 	@ms({n*p+1}) += yes, no, beta{0}, gamma{0};
 	@ms({n*p+2}) += a{i,j} : 1<=i<=n, 1<=j<=p;
 	@ms({n*p+2}) += c{j} : 1<=j<=p;
+	@ms({n*p+2}) += alpha;
 	@ms({n*p+3}) += alpha{0};
 }
 
@@ -82,30 +83,25 @@ def init_rules(n,p)
 	
 	[alpha{k}]'{n*p+3} --> [alpha{k+1}] [alpha{k+1}] : 0<=k<= n*p-1;
 	
-	[alpha{n*p+k}]'{n*p+3} <--> [alpha{n*p+k+1}]'0 : n*p-1<=k<n*p+1;
+	[alpha{n*p+k}]'{n*p+3} <--> [alpha{n*p+k+1}]'0 : 0<=k<=n*p+1; 
+	
 	[beta{k}]'{n*p+1} <--> [beta{k+1}]'0 : 0<=k<= 2*n*p+3;
 	[gamma{k}]'{n*p+1} <--> [gamma{k+1}]'0 : 0<= k<= 2*n*p+4;
-	[ ]'{n*p+2} <--> [alpha{2*n*p+2}]'{n*p+3};
+	[alpha]'{n*p+2} <--> [alpha{2*n*p+2}]'{n*p+3}; 
 	[alpha{2*n*p+2},c{j}]'{n*p+2} <--> [ ]'0 : 1<=j<=p;
 
 	/*****************************************/
 	/* 4.- Rules to return a negative answer */
 	/*****************************************/
 	
-	[beta{2*n*p+4},gamma{2*n*p+5}]'{n*p+1} <--> [ ]'{n*p+4};
-	[no]'{n*p+1} <--> [beta{2*n*p+4}]'{n*p+4};
-	[no]'{n*p+4} <--> [ ]'0;
+	[beta{2*n*p+4},gamma{2*n*p+5}]'{n*p+1} <--> [ ]'{n*p+3};
+	[no]'{n*p+1} <--> [beta{2*n*p+4}]'{n*p+3};
+	[no]'{n*p+3} <--> [ ]'0;
 	
 	/*****************************************/
 	/* 5.- Rules to return a positive answer */
 	/*****************************************/	
-	[alpha{2*n*p+1}]'{n*p+3} <--> [beta{2*n*p+4}]'{n*p+1};
-	[beta{2*n*p+4}]'{n*p+3} <--> [yes]'{n*p+1};
-	[yes]'{n*p+3} <--> []'0;
+	[beta{2*n*p+4}]'{n*p+1} <--> [alpha{2*n*p+2}]'{n*p+2};
+	[alpha{2*n*p+2},yes]'{n*p+1} <--> [ ]'0;
 
 }
-
-
-
-
-
