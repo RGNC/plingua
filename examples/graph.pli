@@ -1,0 +1,18 @@
+@include "transition_model.pli"
+@model<transition>
+
+def main()
+{
+	graph(9);
+}
+
+def graph(n) 
+{
+
+	@mu = [ ]'1;
+	@ms(1) += a{i} : 1<=i <= n;
+	@ms(1) += es{i,j} : i< j <= n, 1<= i <= n;
+
+	[a{i},a{j},es{i,j}  --> a{i}, a{j}, e{i,j}]'1 : i < j <= n, 1<= i <= n;
+	[a{i},a{j},es{i,j}  --> a{i}, a{j}]'1 :  i < j <= n, 1<= i <= n;
+}
