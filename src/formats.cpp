@@ -34,7 +34,7 @@ bool codifyJson(const File& file, const std::string& path)  {
 
 
 bool codifyXml(const File& file, const std::string& path)  {
-	saveToJsonFile(path,file);
+	saveToXmlFile(path,file);
 	return true;
 }
 
