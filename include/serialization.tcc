@@ -30,10 +30,10 @@ Value& Value::operator =(unsigned char value) {
 
 inline
 Value& Value::operator =(short value) {
-	if (value >= std::numeric_limits<unsigned char>::min() &&
+	/*if (value >= std::numeric_limits<unsigned char>::min() &&
 	     value <= std::numeric_limits<unsigned char>::max()) {
 		return operator =((unsigned char)value);
-	}
+	}*/ 
 	clear(); 
 	type_ = SHORT;    
 	value_.shortValue = value; 
