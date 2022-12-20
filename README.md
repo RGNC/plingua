@@ -18,3 +18,4 @@ sudo apt-get install build-essential flex bison libboost-filesystem-dev libboost
 * make compiler
 * make simulator
 * sudo make install
+
